@@ -6,6 +6,7 @@
 
 #include "backend.h"
 
+#include "text.h"
 #include "main_font.h"
 #include "num_font.h"
 #include "debug.h"
@@ -97,10 +98,10 @@ void view_repaint(View *view, bool force) {
 
         // Header text
         backend_set_color(220, 220, 220, 0xff);
-        backend_draw_text("rosco_m68k\xae", view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_HEIGHT);
+        text_write("rosco_m68k\xae", view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_HEIGHT);
 
         backend_set_color(220, 220, 0, 0xff);
-        backend_draw_text(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * 8), view->main_box_header.y + 2, FONT, FONT_HEIGHT);
+        text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * 8), view->main_box_header.y + 2, FONT, FONT_HEIGHT);
 
         // Selection bar
         Rect selection_rect;
@@ -128,7 +129,7 @@ void view_repaint(View *view, bool force) {
             }
 #           endif
 
-            backend_draw_text(view->model->items[i], x, y, FONT, FONT_HEIGHT);
+            text_write(view->model->items[i], x, y, FONT, FONT_HEIGHT);
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == current.selection) {
@@ -143,16 +144,16 @@ void view_repaint(View *view, bool force) {
         if (view->model->timer_secs_left) {
             secs_buf[0] = view->model->timer_secs_left;
             backend_set_color(220, 220, 0, 0xff);
-            backend_draw_text(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_HEIGHT);
+            text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_HEIGHT);
         }
 
         // Sysinfo header
         backend_set_color(0x1f, 0x2c, 0x38, 0xff);
-        backend_draw_text(mem_buffer, 6, 6, FONT, 16);
-        backend_draw_text(cpu_buffer, VIEW_HRES - (cpu_buffer_len * 8) - 6, 6, FONT, FONT_HEIGHT);
+        text_write(mem_buffer, 6, 6, FONT, 16);
+        text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * 8) - 6, 6, FONT, FONT_HEIGHT);
 
         // Copyright footer
-        backend_draw_text("\xaf 2024 The rosco_m68k\xae Open Source Project", 296, 460, FONT, FONT_HEIGHT);
+        text_write("\xaf 2024 The rosco_m68k\xae Open Source Project", 296, 460, FONT, FONT_HEIGHT);
 
         backend_present();
     }
