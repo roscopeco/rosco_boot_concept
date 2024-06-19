@@ -1,3 +1,8 @@
-*.o
-test
-
+.vscode
+**/*.o
+*.bin
+*.elf
+*.dis
+*.map
+*.sym
+sdl2/test
