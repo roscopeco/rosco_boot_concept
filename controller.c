@@ -1,3 +1,18 @@
+/*
+ *------------------------------------------------------------
+ *                                  ___ ___ _
+ *  ___ ___ ___ ___ ___       _____|  _| . | |_
+ * |  _| . |_ -|  _| . |     |     | . | . | '_|
+ * |_| |___|___|___|___|_____|_|_|_|___|___|_,_|
+ *                     |_____|          firmware
+ * ------------------------------------------------------------
+ * Copyright (c)2024 The rosco_m68k Open Source Project
+ * See top-level LICENSE.md for licence information.
+ *
+ * Controller for concept boot screen
+ * ------------------------------------------------------------
+ */
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -57,7 +72,7 @@ bool control(Model *model) {
         }
 
         return true;
-#ifndef __ROSCO_M68K
+#ifndef __ROSCO_M68K_ROM__
     case QUIT:
         return false;
 #endif

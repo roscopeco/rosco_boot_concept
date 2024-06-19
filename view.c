@@ -1,3 +1,18 @@
+/*
+ *------------------------------------------------------------
+ *                                  ___ ___ _
+ *  ___ ___ ___ ___ ___       _____|  _| . | |_
+ * |  _| . |_ -|  _| . |     |     | . | . | '_|
+ * |_| |___|___|___|___|_____|_|_|_|___|___|_,_|
+ *                     |_____|          firmware
+ * ------------------------------------------------------------
+ * Copyright (c)2024 The rosco_m68k Open Source Project
+ * See top-level LICENSE.md for licence information.
+ *
+ * View for concept boot screen
+ * ------------------------------------------------------------
+ */
+
 #include <stdio.h>
 #include <string.h>
 
@@ -63,7 +78,7 @@ void view_recompute_size(View *view, Model *model) {
     view->bottom_shadow.h = SHADOW_OFFSET;
 }
 
-#ifdef __ROSCO_M68K
+#ifdef __ROSCO_M68K_ROM__
 #define debug_model_update(...)
 #else
 void debug_model_update(Model *model) {

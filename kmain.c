@@ -9,17 +9,13 @@
  * Copyright (c)2024 The rosco_m68k Open Source Project
  * See top-level LICENSE.md for licence information.
  *
- * Controller for concept boot screen
+ * Stub kmain for concept boot screen
  * ------------------------------------------------------------
  */
 
-#ifndef __CONTROLLER_H
-#define __CONTROLLER_H
+int main();
 
-#include <stdbool.h>
+void kmain() {
+    main();
+}
 
-#include "model.h"
-
-bool control(Model *model);
-
-#endif
