@@ -9,15 +9,26 @@
  * Copyright (c)2024 The rosco_m68k Open Source Project
  * See top-level LICENSE.md for licence information.
  *
- * Text rendering for concept boot screen
+ * Animation support for concept boot screen
  * ------------------------------------------------------------
  */
 
-#ifndef __TEXT_H
-#define __TEXT_H
+#ifndef __ANIMATION_H
+#define __ANIMATION_H
 
 #include <stdint.h>
 
-void text_write(const char *str, int x, int y, const uint8_t *font, int font_width, int font_height);
+#include "config.h"
+
+#ifdef ENABLE_ANIM
+#include "list.h"
+
+typedef struct Anim {
+    ListNode node;
+    bool (*tick)(uint32_t ticks, struct Anim *anim);
+    void (*paint)(struct Anim *anim);
+    bool dirty;
+} Animation;
+#endif
 
 #endif

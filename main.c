@@ -19,6 +19,13 @@
 #include "view.h"
 #include "controller.h"
 
+#ifdef ENABLE_ANIM
+#include "animation.h"
+#ifdef SHOW_TEST_ANIM
+#include "test_anim.h"
+#endif
+#endif
+
 #include "backend.h"
 
 static int n_menu_items = 5;
@@ -33,13 +40,33 @@ static char* menu_items[] = {
 static Model model;
 static View view;
 
-int main() {
+#ifdef ENABLE_ANIM
+#ifdef SHOW_TEST_ANIM
+static TestAnimation test_animation;
+static TestAnimation test_animation_2;
+#endif
+#endif
+
+int main(void) {
     model.n_items = n_menu_items;
     model.items = menu_items;
     model.mem_count = 14680064;
     model.cpu = 68010;
     model.mhz = 10;
     model.timer_secs_left = 5;
+
+#ifdef ENABLE_ANIM
+#ifdef SHOW_TEST_ANIM
+    test_animation.animation.tick = test_anim_tick;
+    test_animation.animation.paint = test_anim_paint;
+    test_animation_2.animation.tick = test_anim_tick;
+    test_animation_2.animation.paint = test_anim_paint;
+    test_animation_2.next_y = 40;
+
+    list_insert_after((ListNode*)&test_animation, &model.animations_front);
+    list_insert_after((ListNode*)&test_animation_2, &model.animations_back);
+#endif
+#endif
 
     if (!backend_init()) {
         printf("Backend init failed\n");

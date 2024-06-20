@@ -19,19 +19,68 @@
 #include "model.h"
 #include "backend.h"
 
-static bool update_timer(Model *model) {
-    if (model->timer_secs_left) {
-        uint32_t now = backend_get_ticks();
+#include "config.h"
 
-        if (model->last_timer_ticks == 0) {
+#ifdef ENABLE_ANIM
+static void tick_anims(Model *model, uint32_t now) {
+    Animation* current_front = (Animation*)model->animations_front.next;
+    Animation* current_back = (Animation*)model->animations_back.next;
+
+    if (current_front || current_back) {
+        if (model->last_4t_timer_ticks == 0) {
             // first run, just set it up...
             // (or we've hit a rare actual zero rollover, whatever...)
-            model->last_timer_ticks = now;
+            model->last_4t_timer_ticks = now;
         } else {
-            uint32_t elapsed = now - model->last_timer_ticks;
+            uint32_t elapsed = now - model->last_4t_timer_ticks;
 
+            // 4tick interval timer
+            if (elapsed >= 4) {
+
+                while (current_front || current_back) {
+                    if (current_front) {
+                        if (!current_front->tick(now, current_front)) {
+                            list_delete(&current_front->node);
+                            model->anim_list_dirty = true;
+                        }
+                        current_front = (Animation*)current_front->node.next;
+                    }
+                    if (current_back) {
+                        if (!current_back->tick(now, current_back)) {
+                            list_delete(&current_back->node);
+                            model->anim_list_dirty = true;
+                        }
+                        current_back = (Animation*)current_back->node.next;
+                    }
+                }
+
+                model->last_4t_timer_ticks = backend_get_ticks();
+            }
+        }
+    }
+}
+#else
+#define tick_anims(...)
+#endif
+
+static bool update_timers(Model *model) {
+    uint32_t now = backend_get_ticks();
+
+    // Do animations first, unless there aren't any active...
+    tick_anims(model, now);
+
+    // Do 1s countdown timer, unless it's already expired
+    if (model->timer_secs_left) {
+        if (model->last_1s_timer_ticks == 0) {
+            // first run, just set it up...
+            // (or we've hit a rare actual zero rollover, whatever...)
+            model->last_1s_timer_ticks = now;
+        } else {
+            uint32_t elapsed = now - model->last_1s_timer_ticks;
+
+            // 1sec interval timer
             if (elapsed >= 100) {
-                model->last_timer_ticks = backend_get_ticks();
+                model->last_1s_timer_ticks = backend_get_ticks();
                 model->timer_secs_left--;
 
                 return model->timer_secs_left == 0;
@@ -44,11 +93,10 @@ static bool update_timer(Model *model) {
 
 bool control(Model *model) {
     // do first, so keypress can set zero and kill timer...
-    if (update_timer(model)) {
+    if (update_timers(model)) {
         printf("Timer expired; default choice: %d\n", model->selection);
         return false;
     };
-
 
     BACKEND_EVENT event = backend_poll_event();
     switch (event) {

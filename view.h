@@ -20,28 +20,44 @@
 #include <stdbool.h>
 #include "model.h"
 
-#define VIEW_HRES   320
-#define VIEW_VRES   240
-#define VERSION     "2.50.DEV"
+#include "config.h"
 
-//#define CENTER_ITEMS
-#define HIGHLIGHT_SELECTION
-#define FONT_8X8
-
+/*
+ * Resolution-specific defines
+ */
 #if VIEW_HRES == 320
 #include "topaz_font.h"
-#define BOX_WIDTH       ((VIEW_HRES/1.4))
+#define BOX_WIDTH       ((VIEW_HRES/1.4))       /* Width of the box */
+#define LINE_HEIGHT_EX  2                       /* Just allows line height adjustment per resolution */
+#define COPYRIGHT_MAX   38                      /* Max characters in copyright before overflow */
 #elif VIEW_HRES == 640
-#include "main_font.h"
-#define BOX_WIDTH       ((VIEW_HRES/1.8))
+#include "bizcat_font.h"
+#define BOX_WIDTH       ((VIEW_HRES/1.8))       /* Width of the box */
+#define LINE_HEIGHT_EX  0                       /* Just allows line height adjustment per resolution */
+#define COPYRIGHT_MAX   58                      /* Max characters in copyright before overflow */
 #else
 #error Unknown resolution - add settings to view.h
 #endif
+
 #include "num_font.h"
 
+/*
+ * Font-specific defines
+ */
+#if defined(FONT_BIZCAT)
+#define COPYRIGHT       "\xaf" "2024 rosco_m68k\xae Contributors"
+#define BOX_TITLE       "rosco_m68k\xae"
+#elif defined(FONT_TOPAZ)
+#define COPYRIGHT       "\x88" "2024 rosco_m68k\x8d Contributors"
+#define BOX_TITLE       "rosco_m68k\x8d"
+#endif
+
+/*
+ * Res/font independent calculated values
+ */
 #define MIN_PADDING     ((LINE_HEIGHT * 1.5))       // at top and bottom of screen
-#define LINE_HEIGHT     ((FONT_HEIGHT + (FONT_HEIGHT / 4)))
-#define LINE_PAD        (((FONT_HEIGHT / 8)))
+#define LINE_HEIGHT     ((FONT_HEIGHT + (FONT_HEIGHT / 4 + LINE_HEIGHT_EX)))
+#define LINE_PAD        (((FONT_HEIGHT / 8) + (LINE_HEIGHT_EX / 2)))
 #define SHADOW_OFFSET   ((VIEW_HRES / 80))
 
 typedef struct {

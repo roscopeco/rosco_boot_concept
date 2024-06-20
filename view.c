@@ -27,10 +27,6 @@
 #define MAX_BOX_HEIGHT  ((VIEW_VRES-(MIN_PADDING*2)))
 #define CHAR_BUF_SIZE   16
 
-// 38 chars max!
-#define COPYRIGHT_MAX   38
-#define COPYRIGHT       "\xaf" "2024 rosco_m68k\xae Contributors"
-
 static Model current;
 
 static char secs_buf[2];
@@ -90,16 +86,48 @@ void debug_model_update(Model *model) {
     debugf("    secs_left: 0x%02x\n", model->timer_secs_left);
     debugf("    items_ptr: %p\n", model->items);
     debugf("    n_items  : %d\n", model->n_items);
+
+#   ifdef ENABLE_ANIM
+    debugf("  anim_dirty : %d\n", model->anim_list_dirty);
+    debugf("  anim_front : %p\n", model->animations_front.next);
+    debugf("   anim_back : %p\n", model->animations_back.next);
+#   endif
+
     debugf("\n");
 }
 #endif
 
+#ifdef ENABLE_ANIM
+static void paint_anim_layer(Animation *current_anim) {
+    while (current_anim) {
+        // Don't check dirty, always paint anims when painting.
+        // **do** set dirty false though, in case the anim was what triggered this repaint...
+        current_anim->paint(current_anim);
+        current_anim->dirty = false;
+        current_anim = (Animation*)current_anim->node.next;
+    }
+}
+#else
+#define paint_anim_layer(...)
+#endif
+
 void view_repaint(View *view, bool force) {
-    if (force || model_is_dirty(&current, view->model)) {
+    if (force || model_is_dirty(&current, view->model)) {        
         debug_model_update(view->model);
 
         backend_set_color(0x2f, 0x3c, 0x48, 0xff);
         backend_clear();
+
+        // Sysinfo header
+        backend_set_color(0x1f, 0x2c, 0x38, 0xff);
+        text_write(mem_buffer, 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
+        text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * FONT_WIDTH) - 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
+
+        // Copyright footer
+        text_write(COPYRIGHT, VIEW_HRES - (copyright_len * FONT_WIDTH) - 6, VIEW_VRES - LINE_HEIGHT, FONT, FONT_WIDTH, FONT_HEIGHT);
+
+        // Animations (back)
+        paint_anim_layer((Animation*)view->model->animations_back.next);
 
         // Main box
         backend_set_color(220, 220, 220, 0xff);
@@ -116,10 +144,10 @@ void view_repaint(View *view, bool force) {
 
         // Header text
         backend_set_color(220, 220, 220, 0xff);
-        text_write("rosco_m68k\xae", view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_HEIGHT);
+        text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         backend_set_color(220, 220, 0, 0xff);
-        text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * 8), view->main_box_header.y + 2, FONT, FONT_HEIGHT);
+        text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         // Selection bar
         Rect selection_rect;
@@ -136,7 +164,7 @@ void view_repaint(View *view, bool force) {
 
         for (int i = 0; i < view->model->n_items; i++) {
 #           ifdef CENTER_ITEMS
-            int x = view->main_box.x + (view->main_box.w / 2) - (strlen(view->model->items[i]) * 8 / 2);
+            int x = view->main_box.x + (view->main_box.w / 2) - (strlen(view->model->items[i]) * FONT_WIDTH / 2);
             #else
             int x = view->main_box_header.x + 4;
 #           endif
@@ -147,7 +175,7 @@ void view_repaint(View *view, bool force) {
             }
 #           endif
 
-            text_write(view->model->items[i], x, y, FONT, FONT_HEIGHT);
+            text_write(view->model->items[i], x, y, FONT, FONT_WIDTH, FONT_HEIGHT);
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == current.selection) {
@@ -162,16 +190,11 @@ void view_repaint(View *view, bool force) {
         if (view->model->timer_secs_left) {
             secs_buf[0] = view->model->timer_secs_left;
             backend_set_color(220, 220, 0, 0xff);
-            text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_HEIGHT);
+            text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
         }
 
-        // Sysinfo header
-        backend_set_color(0x1f, 0x2c, 0x38, 0xff);
-        text_write(mem_buffer, 6, 6, FONT, FONT_HEIGHT);
-        text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * 8) - 6, 6, FONT, FONT_HEIGHT);
-
-        // Copyright footer
-        text_write(COPYRIGHT, VIEW_HRES - (copyright_len * 8) - 6, VIEW_VRES - LINE_HEIGHT, FONT, FONT_HEIGHT);
+        // Animations (front)
+        paint_anim_layer((Animation*)view->model->animations_front.next);
 
         backend_present();
     }

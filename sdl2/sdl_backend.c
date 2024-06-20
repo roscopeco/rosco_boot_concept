@@ -21,7 +21,8 @@ static SDL_Renderer *renderer;
 
 bool backend_init() {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(VIEW_HRES * VIEW_HSCALE, VIEW_VRES * VIEW_VSCALE, 0, &window, &renderer);
+    window = SDL_CreateWindow("The Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIEW_HRES * VIEW_HSCALE, VIEW_VRES * VIEW_VSCALE, 0);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetScale(renderer, VIEW_HSCALE, VIEW_VSCALE);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);

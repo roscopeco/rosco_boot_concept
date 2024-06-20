@@ -9,15 +9,19 @@
  * Copyright (c)2024 The rosco_m68k Open Source Project
  * See top-level LICENSE.md for licence information.
  *
- * Text rendering for concept boot screen
+ * Linked list for concept boot screen
  * ------------------------------------------------------------
  */
 
-#ifndef __TEXT_H
-#define __TEXT_H
+#ifndef __LIST_H
+#define __LIST_H
 
-#include <stdint.h>
+typedef struct Node {
+    struct Node *next;
+    struct Node *prev;
+} ListNode;
 
-void text_write(const char *str, int x, int y, const uint8_t *font, int font_width, int font_height);
+ListNode* list_insert_after(ListNode *node, ListNode *after);
+ListNode* list_delete(ListNode *node);
 
 #endif

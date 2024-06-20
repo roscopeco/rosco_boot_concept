@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#define FONT_TOPAZ
 #define FONT_WIDTH      8
 #define FONT_HEIGHT     8
 
