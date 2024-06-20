@@ -22,12 +22,14 @@
 #include "backend.h"
 
 #include "text.h"
-#include "main_font.h"
-#include "num_font.h"
 #include "debug.h"
 
 #define MAX_BOX_HEIGHT  ((VIEW_VRES-(MIN_PADDING*2)))
 #define CHAR_BUF_SIZE   16
+
+// 38 chars max!
+#define COPYRIGHT_MAX   38
+#define COPYRIGHT       "\xaf" "2024 rosco_m68k\xae Contributors"
 
 static Model current;
 
@@ -35,8 +37,8 @@ static char secs_buf[2];
 static char cpu_buffer[CHAR_BUF_SIZE];
 static char mem_buffer[CHAR_BUF_SIZE];
 static uint8_t cpu_buffer_len;
+static uint8_t copyright_len;
 
-static void view_repaint_force(View *view, bool force);
 void view_init(View *view, Model *model) {
     view->model = model;
 
@@ -45,7 +47,8 @@ void view_init(View *view, Model *model) {
     snprintf(mem_buffer, CHAR_BUF_SIZE, "%dMB RAM", model->mem_count / 1048576);
     snprintf(cpu_buffer, CHAR_BUF_SIZE, "MC%d @ %dMHz", model->cpu, model->mhz);
 
-    cpu_buffer_len = strnlen(cpu_buffer, 16);
+    cpu_buffer_len = strnlen(cpu_buffer, CHAR_BUF_SIZE);
+    copyright_len = strnlen(COPYRIGHT, COPYRIGHT_MAX);
 }
 
 void view_recompute_size(View *view, Model *model) {
@@ -129,13 +132,13 @@ void view_repaint(View *view, bool force) {
 
         // Items text
         backend_set_color(0x10, 0x10, 0x10, 0xff);
-        int y = view->main_box_header.y + view->main_box_header.h + 2;
+        int y = view->main_box_header.y + view->main_box_header.h + LINE_PAD;
 
         for (int i = 0; i < view->model->n_items; i++) {
 #           ifdef CENTER_ITEMS
             int x = view->main_box.x + (view->main_box.w / 2) - (strlen(view->model->items[i]) * 8 / 2);
             #else
-            int x = main_box_header.x + 4;
+            int x = view->main_box_header.x + 4;
 #           endif
 
 #           ifdef HIGHLIGHT_SELECTION
@@ -152,7 +155,7 @@ void view_repaint(View *view, bool force) {
             }
 #           endif
 
-            y += 20;
+            y += LINE_HEIGHT;
         }
 
         // ticks remaining
@@ -164,11 +167,11 @@ void view_repaint(View *view, bool force) {
 
         // Sysinfo header
         backend_set_color(0x1f, 0x2c, 0x38, 0xff);
-        text_write(mem_buffer, 6, 6, FONT, 16);
+        text_write(mem_buffer, 6, 6, FONT, FONT_HEIGHT);
         text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * 8) - 6, 6, FONT, FONT_HEIGHT);
 
         // Copyright footer
-        text_write("\xaf 2024 The rosco_m68k\xae Open Source Project", 296, 460, FONT, FONT_HEIGHT);
+        text_write(COPYRIGHT, VIEW_HRES - (copyright_len * 8) - 6, VIEW_VRES - LINE_HEIGHT, FONT, FONT_HEIGHT);
 
         backend_present();
     }

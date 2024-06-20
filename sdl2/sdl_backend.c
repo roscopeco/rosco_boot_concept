@@ -6,8 +6,15 @@
 #include "view.h"
 #include "backend.h"
 
+#if VIEW_HRES == 320
+#define VIEW_HSCALE 4.0
+#define VIEW_VSCALE 4.0
+#elif VIEW_HRES == 640
 #define VIEW_HSCALE 2.0
 #define VIEW_VSCALE 2.0
+#else
+#error Unknown resolution - add scale factor to sdl_backend.c
+#endif
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
