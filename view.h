@@ -26,7 +26,11 @@
  * Resolution-specific defines
  */
 #if VIEW_HRES == 320
+#ifdef ALWAYS_BIZCAT
+#include "bizcat_font.h"
+#else
 #include "topaz_font.h"
+#endif
 #define BOX_WIDTH       ((VIEW_HRES/1.4))       /* Width of the box */
 #define LINE_HEIGHT_EX  2                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   38                      /* Max characters in copyright before overflow */
