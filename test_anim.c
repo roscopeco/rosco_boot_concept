@@ -22,7 +22,7 @@
 #include "backend.h"
 
 #ifdef ENABLE_ANIM
-bool test_anim_tick(uint32_t ticks, Animation *anim) {
+bool test_anim_tick(__attribute__((unused)) uint32_t ticks, Animation *anim) {
     if (((TestAnimation*)anim)->next_y >= 230) {
         return false;
     }
