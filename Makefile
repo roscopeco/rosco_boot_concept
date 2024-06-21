@@ -1,18 +1,20 @@
-ROSCO_M68K_DEFAULT_DIR=../../..
+# Make Xosera test program for rosco_m68k
+#
+# vim: set noet ts=8 sw=8
+# Copyright (c) 2021 Xark
+# MIT LICENSE
 
-ifndef ROSCO_M68K_DIR
-$(info NOTE: ROSCO_M68K_DIR not set, using libs: ../../../code/software/libs)
-ROSCO_M68K_DIR=$(ROSCO_M68K_DEFAULT_DIR)
-else
-$(info NOTE: Using ROSCO_M68K_DIR libs in: $(ROSCO_M68K_DIR))
-endif
+# location of xosera_m68k_api
+XOSERA_M68K_API?=../xosera_m68k_api
 
--include $(ROSCO_M68K_DIR)/code/software/software.mk
+# use generic common make rules for Xosera + rosco_m68k build
+include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 
-EXTRA_CFLAGS=-std=c2x -Wno-format
-EXTRA_LIBS=
+EXTRA_CFLAGS+=-std=c2x -Wno-format
+EXTRA_LIBS+=
 
-all: rosco_boot_concept.bin sdl2/test
+all: $(BINARY) $(DISASM) sdl2/test
+
 clean: cleansdl
 
 sdl2/test: sdl2/Makefile $(OBJECTS)
@@ -20,3 +22,4 @@ sdl2/test: sdl2/Makefile $(OBJECTS)
 
 cleansdl:
 	make -C sdl2 clean
+

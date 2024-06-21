@@ -13,15 +13,34 @@ typedef enum {
     DOWN
 } BACKEND_EVENT;
 
-bool backend_init();
-void backend_clear();
-void backend_set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+typedef enum {
+    COLOR_BLACK = 0,
+    COLOR_WHITE,
+    COLOR_YELLOW,
+    COLOR_BACKGROUND,
+    COLOR_BACKGROUND_SHADOW,
+    COLOR_WINDOW_BACKGROUND,
+    COLOR_SELECTION_BAR,
+    COLOR_ITEM_TEXT,
+    COLOR_ITEM_HIGHLIGHT_TEXT,
+    COLOR_UNUSED1,
+    COLOR_UNUSED2,
+    COLOR_UNUSED3,
+    COLOR_UNUSED4,
+    COLOR_UNUSED5,
+    COLOR_UNUSED6,
+    COLOR_UNUSED7,
+} BACKEND_COLOR;
+
+bool backend_init(void);
+void backend_clear(void);
+void backend_set_color(BACKEND_COLOR color);
 void backend_draw_pixel(int x, int y);
 void backend_draw_rect(Rect *rect);
 void backend_fill_rect(Rect *rect);
-void backend_present();
-uint32_t backend_get_ticks();
-BACKEND_EVENT backend_poll_event();
-void backend_done();
+void backend_present(void);
+uint32_t backend_get_ticks(void);
+BACKEND_EVENT backend_poll_event(void);
+void backend_done(void);
 
 #endif

@@ -19,6 +19,25 @@
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 
+static SDL_Color colors[] = {
+    { 0x00, 0x00, 0x00, 0xff },     // COLOR_BLACK
+    { 0xdc, 0xdc, 0xdc, 0xff },     // COLOR_WHITE
+    { 0xdc, 0xdc, 0x00, 0xff },     // COLOR_YELLOW
+    { 0x2f, 0x3c, 0x48, 0xff },     // COLOR_BACKGROUND
+    { 0x1f, 0x2c, 0x38, 0xff },     // COLOR_BACKGROUND_SHADOW
+    { 0xcc, 0xcc, 0xcc, 0xff },     // COLOR_WINDOW_BACKGROUND
+    { 0x10, 0x80, 0xa0, 0xff },     // COLOR_SELECTION_BAR
+    { 0x10, 0x10, 0x10, 0xff },     // COLOR_ITEM_TEXT
+    { 0xe6, 0xe6, 0xe6, 0xff },     // COLOR_ITEM_HIGHLIGHT_TEXT
+    { 0x00, 0x00, 0x00, 0xff },     // <unused>
+    { 0x00, 0x00, 0x00, 0xff },     //   ...
+    { 0x00, 0x00, 0x00, 0xff },     //   ...
+    { 0x00, 0x00, 0x00, 0xff },     //   ...
+    { 0x00, 0x00, 0x00, 0xff },     //   ...
+    { 0x00, 0x00, 0x00, 0xff },     //   ...
+    { 0x00, 0x00, 0x00, 0xff },     //   ...
+};
+
 bool backend_init() {
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("The Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIEW_HRES * VIEW_HSCALE, VIEW_VRES * VIEW_VSCALE, 0);
@@ -35,8 +54,9 @@ void backend_clear() {
     SDL_RenderClear(renderer);
 }
 
-void backend_set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+void backend_set_color(BACKEND_COLOR color) {
+    SDL_Color sdl_color = colors[color];
+    SDL_SetRenderDrawColor(renderer, sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
 }
 
 void backend_draw_pixel(int x, int y) {

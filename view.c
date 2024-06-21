@@ -115,11 +115,11 @@ void view_repaint(View *view, bool force) {
     if (force || model_is_dirty(&current, view->model)) {        
         debug_model_update(view->model);
 
-        backend_set_color(0x2f, 0x3c, 0x48, 0xff);
+        backend_set_color(COLOR_BACKGROUND);
         backend_clear();
 
         // Sysinfo header
-        backend_set_color(0x1f, 0x2c, 0x38, 0xff);
+        backend_set_color(COLOR_BACKGROUND_SHADOW);
         text_write(mem_buffer, 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
         text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * FONT_WIDTH) - 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
 
@@ -130,23 +130,23 @@ void view_repaint(View *view, bool force) {
         paint_anim_layer((Animation*)view->model->animations_back.next);
 
         // Main box
-        backend_set_color(220, 220, 220, 0xff);
+        backend_set_color(COLOR_WINDOW_BACKGROUND);
         backend_fill_rect(&view->main_box);
 
-        backend_set_color(0, 0, 0, 0xff);
+        backend_set_color(COLOR_BLACK);
         backend_draw_rect(&view->main_box);
         backend_fill_rect(&view->main_box_header);
 
         // Shadow
-        backend_set_color(0x1f, 0x2c, 0x38, 0xff);
+        backend_set_color(COLOR_BACKGROUND_SHADOW);
         backend_fill_rect(&view->right_shadow);
         backend_fill_rect(&view->bottom_shadow);
 
         // Header text
-        backend_set_color(220, 220, 220, 0xff);
+        backend_set_color(COLOR_WHITE);
         text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
 
-        backend_set_color(220, 220, 0, 0xff);
+        backend_set_color(COLOR_YELLOW);
         text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         // Selection bar
@@ -155,11 +155,11 @@ void view_repaint(View *view, bool force) {
         selection_rect.y = view->main_box.y + view->main_box_header.h + (LINE_HEIGHT * current.selection);
         selection_rect.w = view->main_box.w - 2;
         selection_rect.h = LINE_HEIGHT - 1;  // -1 so as not to overdraw border on last item!
-        backend_set_color(0x10, 0x80, 0xa0, 0xff);
+        backend_set_color(COLOR_SELECTION_BAR);
         backend_fill_rect(&selection_rect);
 
         // Items text
-        backend_set_color(0x10, 0x10, 0x10, 0xff);
+        backend_set_color(COLOR_ITEM_TEXT);
         int y = view->main_box_header.y + view->main_box_header.h + LINE_PAD;
 
         for (int i = 0; i < view->model->n_items; i++) {
@@ -171,7 +171,7 @@ void view_repaint(View *view, bool force) {
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == current.selection) {
-                backend_set_color(0xe6, 0xe6, 0xe6, 0xff);
+                backend_set_color(COLOR_ITEM_HIGHLIGHT_TEXT);
             }
 #           endif
 
@@ -179,7 +179,7 @@ void view_repaint(View *view, bool force) {
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == current.selection) {
-                backend_set_color(0x10, 0x10, 0x10, 0xff);
+                backend_set_color(COLOR_ITEM_TEXT);
             }
 #           endif
 
@@ -189,7 +189,7 @@ void view_repaint(View *view, bool force) {
         // ticks remaining
         if (view->model->timer_secs_left) {
             secs_buf[0] = view->model->timer_secs_left;
-            backend_set_color(220, 220, 0, 0xff);
+            backend_set_color(COLOR_YELLOW);
             text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
         }
 

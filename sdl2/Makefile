@@ -11,5 +11,8 @@ clean:
 %.o: ../%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+sdl_backend.o: sdl_backend.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
 test: main.o model.o view.o controller.o list.o text.o test_anim.o sdl_backend.o
 	$(CC) $(LDFLAGS) -o $@ $^
