@@ -63,6 +63,27 @@ void backend_draw_pixel(int x, int y) {
     SDL_RenderDrawPoint(renderer, x, y);
 }
 
+void backend_text_write(const char *str, int x, int y, const uint8_t *font, int font_width, int font_height) {
+    unsigned char c;
+
+    while ((c = *str++)) {
+        const uint8_t *font_ptr = font + (c * font_height);
+
+        for (int dy = 0; dy < font_height; dy++) {
+            for (int dx = 0; dx < font_width; dx++) {
+                if ((*font_ptr & (1 << (font_width-1-dx))) != 0) {
+                    backend_draw_pixel(x+dx, y+dy);
+                }
+            
+            }
+
+            font_ptr++;
+        }
+
+        x += font_width;
+    }
+}
+
 BACKEND_EVENT backend_poll_event() {
     SDL_Event event;
 

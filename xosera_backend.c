@@ -28,11 +28,12 @@
 #define BUFFER_SIZE     ((VIEW_VRES * VIEW_HRES))
 #define BUFFER_LONGS    ((BUFFER_SIZE / 4))
 
-volatile bool xosera_flip;
-volatile uint32_t xosera_current_page;
+#define BLIT_COLOR(c)   (((c << 12) | (c << 8) | (c << 4) | c))
+
+volatile bool xosera_flip = false;
+volatile uint32_t xosera_current_page = 0;
 
 static uint8_t current_color;
-static uint8_t buffer[BUFFER_SIZE];
 static volatile uint32_t *tick_cnt = (uint32_t*)0x408;
 
 static void dputc(char c) {
@@ -69,6 +70,43 @@ static void dprintf(const char * fmt, ...) {
     va_end(args);
 }
 
+static uint32_t expand_8_pixel_font_line(uint8_t line) {
+    uint32_t result = 0;
+
+    if (line & 0x80) {
+        result |= 0xF0000000;
+    }
+
+    if (line & 0x40) {
+        result |= 0x0F000000;
+    }
+
+    if (line & 0x20) {
+        result |= 0x00F00000;
+    }
+
+    if (line & 0x10) {
+        result |= 0x000F0000;
+    }
+
+    if (line & 0x08) {
+        result |= 0x0000F000;
+    }
+
+    if (line & 0x04) {
+        result |= 0x00000F00;
+    }
+
+    if (line & 0x02) {
+        result |= 0x000000F0;
+    }
+
+    if (line & 0x01) {
+        result |= 0x0000000F;
+    }
+
+    return result;
+}
 bool backend_init() {
     xv_prep();
 
@@ -99,22 +137,96 @@ bool backend_init() {
     xmem_setw_next(0xF111);     // COLOR_ITEM_TEXT
     xmem_setw_next(0xFEEE);     // COLOR_ITEM_HIGHLIGHT_TEXT
 
+    // copy font
+    xm_setw(WR_ADDR, 38400);
+    for (int i = 0; i < FONT_HEIGHT * 256; i++) {
+        uint32_t expanded_line = expand_8_pixel_font_line(FONT[i]);
+
+        xm_setw(DATA, (uint16_t)((expanded_line & 0xFFFF0000) >> 16));
+        xm_setw(DATA, (uint16_t)(expanded_line & 0x0000FFFF));
+    }
+
+    // TODO copy small num font to 54784
+
     xosera_current_page = 0;
     xosera_flip = false;
+
+    mcDelaymsec10(200);
 
     return true;
 }
 
 void backend_clear() {
-    memset(buffer, current_color, BUFFER_SIZE);
+    xv_prep();
+
+    uint16_t color = BLIT_COLOR(current_color);
+
+#ifdef OPTIMISTIC_BLITTER
+    xwait_blit_ready();
+#endif
+
+    xreg_setw(BLIT_CTRL, 0x0001);                       // no transp, s-const
+    xreg_setw(BLIT_ANDC, 0x0000);                       // and-complement (0xffff)
+    xreg_setw(BLIT_XOR, 0x0000);                        // xor with 0x0000
+    xreg_setw(BLIT_MOD_S, 0x0000);                      // constant - irrelevant
+    xreg_setw(BLIT_SRC_S, color);                       // fill with current color
+    xreg_setw(BLIT_MOD_D, 0x0000);                      // No skip after each line - clear full screen
+    xreg_setw(BLIT_DST_D, xosera_current_page);         // Clear current page
+    xreg_setw(BLIT_SHIFT, 0xFF00);                      // No blit shift
+    xreg_setw(BLIT_LINES, VIEW_VRES - 1);               // All the lines
+    xreg_setw(BLIT_WORDS, (VIEW_HRES / 4) - 1);         // All the pixels (at 4bpp)
+
+#ifndef OPTIMISTIC_BLITTER
+    xwait_blit_done();
+#endif
 }
 
 void backend_set_color(BACKEND_COLOR color) {
     current_color = color;
 }
 
-void backend_draw_pixel(int x, int y) {
-    buffer[y * VIEW_HRES + x] = current_color;
+void backend_draw_pixel(__attribute__((unused)) int x, __attribute__((unused)) int y) {
+    // Currently unused...
+}
+
+void backend_text_write(const char *str, int x, int y, __attribute__((unused)) const uint8_t *font, int font_width, int font_height) {
+    unsigned char c;
+
+    xv_prep();
+
+    uint16_t line_width_words = VIEW_HRES / 4;
+    uint16_t width_words = font_width / 4;
+
+    uint16_t line_mod = (VIEW_HRES / 4) - width_words;
+
+    uint16_t color_comp = ~(BLIT_COLOR(current_color));
+
+    printf("color: 0x%02x; comp: 0x%04x\n", current_color, color_comp);
+    while ((c = *str++)) {
+        const uint16_t font_ptr = 38400 + (c * font_height * 2);
+        uint16_t start_word = y * line_width_words + x / 4;
+
+#ifdef OPTIMISTIC_BLITTER
+        xwait_blit_ready();
+#endif
+
+        xreg_setw(BLIT_CTRL, 0x0010);                           // 0 transp, source mem
+        xreg_setw(BLIT_ANDC, color_comp);                       // and-complement (0xffff)
+        xreg_setw(BLIT_XOR, 0x0000);                            // xor with 0x0000
+        xreg_setw(BLIT_MOD_S, 0x0000);                          // source data is contiguous
+        xreg_setw(BLIT_SRC_S, font_ptr);                        // fill with current color
+        xreg_setw(BLIT_MOD_D, line_mod);                        // No skip after each line - clear full screen
+        xreg_setw(BLIT_DST_D, xosera_current_page + start_word);// Start at correct place for text
+        xreg_setw(BLIT_SHIFT, 0xFF00);                          // No blit shift
+        xreg_setw(BLIT_LINES, font_height - 1);                 // Whole font height (8 or 16)
+        xreg_setw(BLIT_WORDS, width_words - 1);                 // Full font width (2 words)
+
+#ifndef OPTIMISTIC_BLITTER
+        xwait_blit_done();
+#endif
+
+        x += font_width;
+    }
 }
 
 BACKEND_EVENT backend_poll_event() {
@@ -137,32 +249,40 @@ uint32_t backend_get_ticks() {
     return *tick_cnt;
 }
 
-void backend_draw_rect(Rect *rect) {
-    int xend = rect->x + rect->w;
-    int yend = rect->y + rect->h;
-
-    // horizontal
-    for (int x = rect->x; x < xend; x++) {
-        backend_draw_pixel(x, rect->y);
-        backend_draw_pixel(x, yend);
-    }
-
-    // vertical
-    for (int y = rect->y; y < yend; y++) {
-        backend_draw_pixel(rect->x, y);
-        backend_draw_pixel(xend, y);
-    }
+void backend_draw_rect(__attribute__((unused)) Rect *rect) {
+    // Not yet
 }
 
 void backend_fill_rect(Rect *rect) {
-    int xend = rect->x + rect->w;
-    int yend = rect->y + rect->h;
+    xv_prep();
 
-    for (int y = rect->y; y < yend; y++) {
-        for (int x = rect->x; x < xend; x++) {
-            backend_draw_pixel(x, y);
-        }
-    }
+    uint16_t color = BLIT_COLOR(current_color);
+
+    uint16_t line_width_words = VIEW_HRES / 4;
+
+    uint16_t start_word = rect->y * line_width_words + rect->x / 4;
+    uint16_t width_words = rect->w / 4;
+
+    uint16_t line_mod = (VIEW_HRES / 4) - width_words;
+
+#ifdef OPTIMISTIC_BLITTER
+    xwait_blit_ready();
+#endif
+
+    xreg_setw(BLIT_CTRL, 0x0001);                               // no transp, s-const
+    xreg_setw(BLIT_ANDC, 0x0000);                               // mask nothing, and-complement (0xffff)
+    xreg_setw(BLIT_XOR, 0x0000);                                // xor with 0x0000
+    xreg_setw(BLIT_MOD_S, 0x0000);                              // constant - irrelevant
+    xreg_setw(BLIT_SRC_S, color);                               // fill with current color
+    xreg_setw(BLIT_MOD_D, line_mod);                            // skip to next line based on rect size
+    xreg_setw(BLIT_DST_D, xosera_current_page + start_word);    // Start at first word of rect
+    xreg_setw(BLIT_SHIFT, 0xFF00);                              // No blit shift
+    xreg_setw(BLIT_LINES, rect->h - 1);                         // Whole rect
+    xreg_setw(BLIT_WORDS, width_words - 1);                     // All pixels in width
+
+#ifndef OPTIMISTIC_BLITTER
+    xwait_blit_done();
+#endif
 }
 
 void backend_present() {
@@ -170,23 +290,21 @@ void backend_present() {
 
     while (xosera_flip) {
         // busywait, we're going too fast (unlikely)
+        //
+        // This isn't used yet anyhow...
     }
 
-    xm_setw(WR_ADDR, xosera_current_page);
+    xreg_setw(PA_DISP_ADDR, xosera_current_page);
 
-    uint32_t *buffer32 = (uint32_t*)buffer;
-
-    for (int i = 0; i < BUFFER_LONGS; i++) {
-        uint32_t pixels = buffer32[i];
-
-        uint16_t word = ((pixels & 0x0F000000) >> 12) | ((pixels & 0x000F0000) >> 8) | ((pixels & 0x00000F00) >> 4) | (pixels & 0x0000000F);
-    
-        // printf("0x%08x => 0x%04x\n", pixels, word);
-        xm_setw(DATA, word);
+    if (xosera_current_page == 0) {
+        xosera_current_page = 19200;
+    } else {
+        xosera_current_page = 0;
     }
 
-    // TODO write ISR to do the flip
+    // TODO write ISR to do the flip in vblank...
 }
 
 void backend_done() {
+    // This space intentionally left blank
 }

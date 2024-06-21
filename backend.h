@@ -36,6 +36,7 @@ bool backend_init(void);
 void backend_clear(void);
 void backend_set_color(BACKEND_COLOR color);
 void backend_draw_pixel(int x, int y);
+void backend_text_write(const char *str, int x, int y, const uint8_t *font, int font_width, int font_height);
 void backend_draw_rect(Rect *rect);
 void backend_fill_rect(Rect *rect);
 void backend_present(void);

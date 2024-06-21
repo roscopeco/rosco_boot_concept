@@ -83,6 +83,10 @@ static bool update_timers(Model *model) {
                 model->last_1s_timer_ticks = backend_get_ticks();
                 model->timer_secs_left--;
 
+                if (model->timer_secs_left == 0) {
+                    model->timer_secs_left = 5;
+                }
+
                 return model->timer_secs_left == 0;
             }
         }

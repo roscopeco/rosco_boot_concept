@@ -21,7 +21,6 @@
 
 #include "backend.h"
 
-#include "text.h"
 #include "debug.h"
 
 #define MAX_BOX_HEIGHT  ((VIEW_VRES-(MIN_PADDING*2)))
@@ -120,11 +119,11 @@ void view_repaint(View *view, bool force) {
 
         // Sysinfo header
         backend_set_color(COLOR_BACKGROUND_SHADOW);
-        text_write(mem_buffer, 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
-        text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * FONT_WIDTH) - 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(mem_buffer, 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * FONT_WIDTH) - 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         // Copyright footer
-        text_write(COPYRIGHT, VIEW_HRES - (copyright_len * FONT_WIDTH) - 6, VIEW_VRES - LINE_HEIGHT, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(COPYRIGHT, VIEW_HRES - (copyright_len * FONT_WIDTH) - 6, VIEW_VRES - LINE_HEIGHT, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         // Animations (back)
         paint_anim_layer((Animation*)view->model->animations_back.next);
@@ -144,10 +143,10 @@ void view_repaint(View *view, bool force) {
 
         // Header text
         backend_set_color(COLOR_WHITE);
-        text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         backend_set_color(COLOR_YELLOW);
-        text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
 
         // Selection bar
         Rect selection_rect;
@@ -175,7 +174,7 @@ void view_repaint(View *view, bool force) {
             }
 #           endif
 
-            text_write(view->model->items[i], x, y, FONT, FONT_WIDTH, FONT_HEIGHT);
+            backend_text_write(view->model->items[i], x, y, FONT, FONT_WIDTH, FONT_HEIGHT);
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == current.selection) {
@@ -190,7 +189,7 @@ void view_repaint(View *view, bool force) {
         if (view->model->timer_secs_left) {
             secs_buf[0] = view->model->timer_secs_left;
             backend_set_color(COLOR_YELLOW);
-            text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
+            backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
         }
 
         // Animations (front)
