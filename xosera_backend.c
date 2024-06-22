@@ -24,14 +24,31 @@
 
 #include "view.h"
 #include "backend.h"
+#include "blit_rects.h"
 
 #define BUFFER_SIZE     ((VIEW_VRES * VIEW_HRES))
 #define BUFFER_LONGS    ((BUFFER_SIZE / 4))
 
 #define BLIT_COLOR(c)   (((c << 12) | (c << 8) | (c << 4) | c))
 
+#define XO_COLOR_BLACK              0xF000
+#define XO_COLOR_WHITE              0xFFFF
+#define XO_COLOR_YELLOW             0xFDD0
+#define XO_COLOR_BACKGROUND         0xF234
+#define XO_COLOR_BACKGROUND_SHADOW  0xF123
+#define XO_COLOR_WINDOW_BACKGROUND  0xFCCC
+#define XO_COLOR_SELECTION_BAR      0xF18A
+#define XO_COLOR_ITEM_TEXT          0xF111
+#define XO_COLOR_ITEM_HILITE_TEXT   0xFEEE
+
+#define XO_PAGE_0_ADDR              0x0000
+#define XO_PAGE_1_ADDR              0x4B00
+
+#define XO_MAIN_FONT_ADDR           0x9600
+#define XO_SMALL_FONT_ADDR          0xd600
+
 volatile bool xosera_flip = false;
-volatile uint32_t xosera_current_page = 0;
+volatile uint32_t xosera_current_page = XO_PAGE_0_ADDR;
 
 static uint8_t current_color;
 static volatile uint32_t *tick_cnt = (uint32_t*)0x408;
@@ -107,6 +124,7 @@ static uint32_t expand_8_pixel_font_line(uint8_t line) {
 
     return result;
 }
+
 bool backend_init() {
     xv_prep();
 
@@ -127,18 +145,18 @@ bool backend_init() {
     xmem_setw_next_addr(XR_COLOR_A_ADDR);
 
     // Set up palette
-    xmem_setw_next(0xF000);     // COLOR_BLACK
-    xmem_setw_next(0xFFFF);     // COLOR_BLACK
-    xmem_setw_next(0xFDD0);     // COLOR_YELLOW
-    xmem_setw_next(0xF234);     // COLOR_BACKGROUND
-    xmem_setw_next(0xF123);     // COLOR_BACKGROUND_SHADOW
-    xmem_setw_next(0xFCCC);     // COLOR_WINDOW_BACKGROUND
-    xmem_setw_next(0xF18A);     // COLOR_SELECTION_BAR
-    xmem_setw_next(0xF111);     // COLOR_ITEM_TEXT
-    xmem_setw_next(0xFEEE);     // COLOR_ITEM_HIGHLIGHT_TEXT
+    xmem_setw_next(XO_COLOR_BLACK);
+    xmem_setw_next(XO_COLOR_WHITE);
+    xmem_setw_next(XO_COLOR_YELLOW);
+    xmem_setw_next(XO_COLOR_BACKGROUND);
+    xmem_setw_next(XO_COLOR_BACKGROUND_SHADOW);
+    xmem_setw_next(XO_COLOR_WINDOW_BACKGROUND);
+    xmem_setw_next(XO_COLOR_SELECTION_BAR);
+    xmem_setw_next(XO_COLOR_ITEM_TEXT);
+    xmem_setw_next(XO_COLOR_ITEM_HILITE_TEXT);
 
     // copy font
-    xm_setw(WR_ADDR, 38400);
+    xm_setw(WR_ADDR, XO_MAIN_FONT_ADDR);
     for (int i = 0; i < FONT_HEIGHT * 256; i++) {
         uint32_t expanded_line = expand_8_pixel_font_line(FONT[i]);
 
@@ -146,9 +164,9 @@ bool backend_init() {
         xm_setw(DATA, (uint16_t)(expanded_line & 0x0000FFFF));
     }
 
-    // TODO copy small num font to 54784
+    // TODO copy small num font to XO_NUM_FONT_ADDR
 
-    xosera_current_page = 0;
+    xosera_current_page = XO_PAGE_0_ADDR;
     xosera_flip = false;
 
     mcDelaymsec10(200);
@@ -165,9 +183,9 @@ void backend_clear() {
     xwait_blit_ready();
 #endif
 
-    xreg_setw(BLIT_CTRL, 0x0001);                       // no transp, s-const
-    xreg_setw(BLIT_ANDC, 0x0000);                       // and-complement (0xffff)
-    xreg_setw(BLIT_XOR, 0x0000);                        // xor with 0x0000
+    xreg_setw(BLIT_CTRL,  0x0001);                      // no transp, s-const
+    xreg_setw(BLIT_ANDC,  0x0000);                      // and-complement (0xffff)
+    xreg_setw(BLIT_XOR,   0x0000);                      // xor with 0x0000
     xreg_setw(BLIT_MOD_S, 0x0000);                      // constant - irrelevant
     xreg_setw(BLIT_SRC_S, color);                       // fill with current color
     xreg_setw(BLIT_MOD_D, 0x0000);                      // No skip after each line - clear full screen
@@ -190,6 +208,7 @@ void backend_draw_pixel(__attribute__((unused)) int x, __attribute__((unused)) i
 }
 
 void backend_text_write(const char *str, int x, int y, __attribute__((unused)) const uint8_t *font, int font_width, int font_height) {
+    // TODO support different font (for small text)
     unsigned char c;
 
     xv_prep();
@@ -203,16 +222,16 @@ void backend_text_write(const char *str, int x, int y, __attribute__((unused)) c
 
     printf("color: 0x%02x; comp: 0x%04x\n", current_color, color_comp);
     while ((c = *str++)) {
-        const uint16_t font_ptr = 38400 + (c * font_height * 2);
+        const uint16_t font_ptr = XO_MAIN_FONT_ADDR + (c * font_height * 2);
         uint16_t start_word = y * line_width_words + x / 4;
 
 #ifdef OPTIMISTIC_BLITTER
         xwait_blit_ready();
 #endif
 
-        xreg_setw(BLIT_CTRL, 0x0010);                           // 0 transp, source mem
-        xreg_setw(BLIT_ANDC, color_comp);                       // and-complement (0xffff)
-        xreg_setw(BLIT_XOR, 0x0000);                            // xor with 0x0000
+        xreg_setw(BLIT_CTRL,  0x0010);                          // 0 transp, source mem
+        xreg_setw(BLIT_ANDC,  color_comp);                      // and-complement (0xffff)
+        xreg_setw(BLIT_XOR,   0x0000);                          // xor with 0x0000
         xreg_setw(BLIT_MOD_S, 0x0000);                          // source data is contiguous
         xreg_setw(BLIT_SRC_S, font_ptr);                        // fill with current color
         xreg_setw(BLIT_MOD_D, line_mod);                        // No skip after each line - clear full screen
@@ -253,36 +272,48 @@ void backend_draw_rect(__attribute__((unused)) Rect *rect) {
     // Not yet
 }
 
-void backend_fill_rect(Rect *rect) {
-    xv_prep();
-
+static inline void blit_fill_rect(
+    uint16_t start_word, 
+    uint16_t width_words, 
+    uint16_t height_lines, 
+    uint16_t line_mod
+) {
     uint16_t color = BLIT_COLOR(current_color);
-
-    uint16_t line_width_words = VIEW_HRES / 4;
-
-    uint16_t start_word = rect->y * line_width_words + rect->x / 4;
-    uint16_t width_words = rect->w / 4;
-
-    uint16_t line_mod = (VIEW_HRES / 4) - width_words;
 
 #ifdef OPTIMISTIC_BLITTER
     xwait_blit_ready();
 #endif
 
-    xreg_setw(BLIT_CTRL, 0x0001);                               // no transp, s-const
-    xreg_setw(BLIT_ANDC, 0x0000);                               // mask nothing, and-complement (0xffff)
-    xreg_setw(BLIT_XOR, 0x0000);                                // xor with 0x0000
+    xreg_setw(BLIT_CTRL,  0x0001);                              // no transp, s-const
+    xreg_setw(BLIT_ANDC,  0x0000);                              // mask nothing, and-complement (0xffff)
+    xreg_setw(BLIT_XOR,   0x0000);                              // xor with 0x0000
     xreg_setw(BLIT_MOD_S, 0x0000);                              // constant - irrelevant
     xreg_setw(BLIT_SRC_S, color);                               // fill with current color
     xreg_setw(BLIT_MOD_D, line_mod);                            // skip to next line based on rect size
     xreg_setw(BLIT_DST_D, xosera_current_page + start_word);    // Start at first word of rect
     xreg_setw(BLIT_SHIFT, 0xFF00);                              // No blit shift
-    xreg_setw(BLIT_LINES, rect->h - 1);                         // Whole rect
+    xreg_setw(BLIT_LINES, height_lines - 1);                    // Whole rect
     xreg_setw(BLIT_WORDS, width_words - 1);                     // All pixels in width
 
 #ifndef OPTIMISTIC_BLITTER
     xwait_blit_done();
 #endif
+}
+
+void backend_fill_rect(Rect *rect) {
+    xv_prep();
+
+    uint16_t line_width_words = VIEW_HRES >> 2;
+
+    BlitRects rect_lines;
+    blit_lines(rect->x, rect->w, &rect_lines);
+
+    if (rect_lines.left.width > 0) {
+        uint16_t start_word = y * line_width_words + (rect->x >> 2);
+        uint16_t line_mod = line_width_words - rect_lines.left.width;
+
+        blit_fill_rect(start_word, rect_lines.left.width, rect->h, line_mod);
+    }
 }
 
 void backend_present() {
@@ -296,10 +327,10 @@ void backend_present() {
 
     xreg_setw(PA_DISP_ADDR, xosera_current_page);
 
-    if (xosera_current_page == 0) {
-        xosera_current_page = 19200;
+    if (xosera_current_page == XO_PAGE_0_ADDR) {
+        xosera_current_page = XO_PAGE_1_ADDR;
     } else {
-        xosera_current_page = 0;
+        xosera_current_page = XO_PAGE_0_ADDR;
     }
 
     // TODO write ISR to do the flip in vblank...

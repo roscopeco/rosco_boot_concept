@@ -13,12 +13,20 @@ include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 EXTRA_CFLAGS+=-std=c2x -Wno-format
 EXTRA_LIBS+=
 
-all: $(BINARY) $(DISASM) sdl2/test
+.PHONY: all clean tests
 
-clean: cleansdl
+all: tests $(BINARY) $(DISASM) sdl2/test
 
-sdl2/test: sdl2/Makefile $(OBJECTS)
+clean: cleansdl cleantests
+
+tests: tests/Makefile	
+	make -C tests test
+
+sdl2/test: tests sdl2/Makefile $(OBJECTS)
 	make -C sdl2 test
+
+cleantests:
+	make -C tests clean
 
 cleansdl:
 	make -C sdl2 clean

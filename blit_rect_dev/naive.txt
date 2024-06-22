@@ -1,0 +1,42 @@
+full  rect is { x: 1, xe: 9, w: 9 }
+left  rect is { x: 0, w: 4 } = 0x0fff
+main  rect is { x: 4, w: 4 } = 0xffff
+right rect is { x: 8, w: 4 } = 0xff00
+left : BLIT_DST_D = 0x0000; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0x0fff
+main : BLIT_DST_D = 0x0001; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0xffff
+right: BLIT_DST_D = 0x0002; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0xff00
+full  rect is { x: 1, xe: 13, w: 13 }
+left  rect is { x: 0, w: 4 } = 0x0fff
+main  rect is { x: 4, w: 8 } = 0xffff
+right rect is { x: 12, w: 4 } = 0xff00
+left : BLIT_DST_D = 0x0000; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0x0fff
+main : BLIT_DST_D = 0x0001; BLIT_WORDS = 0x0002; BLIT_SRC_S = 0xffff
+right: BLIT_DST_D = 0x0003; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0xff00
+full  rect is { x: 0, xe: 3, w: 4 }
+left  rect is { x: -1, w: 0 } = 0x0000
+main  rect is { x: 0, w: 4 } = 0xffff
+right rect is { x: -1, w: 0 } = 0x0000
+<no left rect>
+main : BLIT_DST_D = 0x0000; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0xffff
+<no right rect>
+full  rect is { x: 3, xe: 4, w: 2 }
+left  rect is { x: 0, w: 4 } = 0x000f
+main  rect is { x: -1, w: 0 } = 0x0000
+right rect is { x: 4, w: 4 } = 0xf000
+left : BLIT_DST_D = 0x0000; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0x000f
+<no main rect>
+right: BLIT_DST_D = 0x0001; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0xf000
+full  rect is { x: 3, xe: 3, w: 1 }
+left  rect is { x: 0, w: 4 } = 0x000f
+main  rect is { x: -1, w: 0 } = 0x0000
+right rect is { x: -1, w: 0 } = 0x0000
+left : BLIT_DST_D = 0x0000; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0x000f
+<no main rect>
+<no right rect>
+full  rect is { x: 4, xe: 7, w: 4 }
+left  rect is { x: -1, w: 0 } = 0x0000
+main  rect is { x: 4, w: 4 } = 0xffff
+right rect is { x: -1, w: 0 } = 0x0000
+<no left rect>
+main : BLIT_DST_D = 0x0001; BLIT_WORDS = 0x0001; BLIT_SRC_S = 0xffff
+<no right rect>
