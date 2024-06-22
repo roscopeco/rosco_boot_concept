@@ -13,6 +13,14 @@ include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 EXTRA_CFLAGS+=-std=c2x -Wno-format
 EXTRA_LIBS+=
 
+ifeq ($(MODEL_DEBUG),true)
+EXTRA_CFLAGS+=-DMODEL_DEBUG
+endif
+
+ifeq ($(BLIT_DEBUG),true)
+EXTRA_CFLAGS+=-DBLIT_DEBUG
+endif
+
 .PHONY: all clean tests
 
 all: tests $(BINARY) $(DISASM) sdl2/test

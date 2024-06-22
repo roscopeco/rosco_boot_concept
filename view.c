@@ -79,6 +79,7 @@ void view_recompute_size(View *view, Model *model) {
 #ifdef __ROSCO_M68K_ROM__
 #define debug_model_update(...)
 #else
+#ifdef MODEL_DEBUG
 void debug_model_update(Model *model) {
     debugf("Model updated:\n");
     debugf("    selection: 0x%02x\n", model->selection);
@@ -94,6 +95,9 @@ void debug_model_update(Model *model) {
 
     debugf("\n");
 }
+#else
+#define debug_model_update(...)
+#endif
 #endif
 
 #ifdef ENABLE_ANIM
@@ -155,6 +159,9 @@ void view_repaint(View *view, bool force) {
         selection_rect.w = view->main_box.w - 2;
         selection_rect.h = LINE_HEIGHT - 1;  // -1 so as not to overdraw border on last item!
         backend_set_color(COLOR_SELECTION_BAR);
+#ifdef BLIT_DEBUG
+        printf("SHADOW (B)   ::::::: ");
+#endif   
         backend_fill_rect(&selection_rect);
 
         // Items text

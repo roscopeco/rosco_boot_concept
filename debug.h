@@ -19,7 +19,11 @@
 #ifdef __ROSCO_M68K_ROM__
 #define debugf(...)
 #else
+#ifdef MODEL_DEBUG
 #define debugf(...)     printf(__VA_ARGS__)
+#else
+#define debugf(...)
+#endif
 #endif
 
 #endif

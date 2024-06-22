@@ -17,7 +17,7 @@ unity/unity.o: unity/unity.c
 test_blit_rects.o: test_blit_rects.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-test_blit_rects: test_blit_rects.o blit_rects.o unity/unity.o
+test_blit_rects: test_blit_rects.o unity/unity.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 test: test_blit_rects
