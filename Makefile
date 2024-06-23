@@ -13,12 +13,28 @@ include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 EXTRA_CFLAGS+=-std=c2x -Wno-format
 EXTRA_LIBS+=
 
+ifeq ($(ENABLE_ANIM),true)
+EXTRA_CFLAGS+=-DENABLE_ANIM
+endif
+
+ifeq ($(ENABLE_TIMER),true)
+EXTRA_CFLAGS+=-DENABLE_TIMER
+endif
+
+ifeq ($(MODEL_DEBUG),true)
+EXTRA_CFLAGS+=-DMODEL_DEBUG
+endif
+
 ifeq ($(MODEL_DEBUG),true)
 EXTRA_CFLAGS+=-DMODEL_DEBUG
 endif
 
 ifeq ($(BLIT_DEBUG),true)
 EXTRA_CFLAGS+=-DBLIT_DEBUG
+endif
+
+ifeq ($(TEST_PATTERN),true)
+EXTRA_CFLAGS+=-DTEST_PATTERN_DEBUG
 endif
 
 .PHONY: all clean tests

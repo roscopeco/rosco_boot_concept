@@ -25,6 +25,7 @@
 #define HIGHLIGHT_SELECTION                     /* Should the text of the selection be highlighted? */
 //#define ENABLE_ANIM                             /* Should the animation system be enabled? */
 //#define SHOW_TEST_ANIM                          /* Should the test animation be displayed? */
+//#define ENABLE_TIMER                            /* Should the count-down timer be enabled? */
 #define ALWAYS_BIZCAT                           /* Always use bizcat font, even at low resolution */
 
 /*

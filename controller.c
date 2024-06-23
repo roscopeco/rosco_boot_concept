@@ -63,12 +63,15 @@ static void tick_anims(Model *model, uint32_t now) {
 #define tick_anims(...)
 #endif
 
-static bool update_timers(Model *model) {
+static bool update_timers(__attribute__((unused)) Model *model) {
+#if defined(ENABLE_ANIM) || defined(ENABLE_TIMER)
     uint32_t now = backend_get_ticks();
+#endif
 
     // Do animations first, unless there aren't any active...
     tick_anims(model, now);
 
+#ifdef ENABLE_TIMER
     // Do 1s countdown timer, unless it's already expired
     if (model->timer_secs_left) {
         if (model->last_1s_timer_ticks == 0) {
@@ -82,15 +85,10 @@ static bool update_timers(Model *model) {
             if (elapsed >= 100) {
                 model->last_1s_timer_ticks = backend_get_ticks();
                 model->timer_secs_left--;
-
-                if (model->timer_secs_left == 0) {
-                    model->timer_secs_left = 5;
-                }
-
-                return model->timer_secs_left == 0;
             }
         }
     }
+#endif
 
     return false;
 }

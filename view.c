@@ -28,11 +28,18 @@
 
 static Model current;
 
+#ifdef ENABLE_TIMER
 static char secs_buf[2];
+#endif
+
 static char cpu_buffer[CHAR_BUF_SIZE];
 static char mem_buffer[CHAR_BUF_SIZE];
 static uint8_t cpu_buffer_len;
 static uint8_t copyright_len;
+
+#ifdef TEST_PATTERN_DEBUG
+extern bool use_ruler;
+#endif
 
 void view_init(View *view, Model *model) {
     view->model = model;
@@ -160,7 +167,7 @@ void view_repaint(View *view, bool force) {
         selection_rect.h = LINE_HEIGHT - 1;  // -1 so as not to overdraw border on last item!
         backend_set_color(COLOR_SELECTION_BAR);
 #ifdef BLIT_DEBUG
-        printf("SHADOW (B)   ::::::: ");
+        printf("SELECTION    ::::::: ");
 #endif   
         backend_fill_rect(&selection_rect);
 
@@ -192,15 +199,85 @@ void view_repaint(View *view, bool force) {
             y += LINE_HEIGHT;
         }
 
+#       ifdef ENABLE_TIMER
         // ticks remaining
         if (view->model->timer_secs_left) {
             secs_buf[0] = view->model->timer_secs_left;
             backend_set_color(COLOR_YELLOW);
             backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
         }
+#       endif
 
         // Animations (front)
         paint_anim_layer((Animation*)view->model->animations_front.next);
+
+#       ifdef TEST_PATTERN_DEBUG
+        use_ruler = true;
+        Rect ruler = { .x = 0, .y = 30, .w = 20, .h = 2 };
+        backend_set_color(COLOR_WHITE);
+        backend_fill_rect(&ruler);
+        
+        use_ruler = false;
+        Rect test1 = { .x = 0, .y = 32, .w = 4, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test1);
+
+        Rect test2 = { .x = 0, .y = 35, .w = 5, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test2);
+
+        Rect test3 = { .x = 0, .y = 38, .w = 6, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test3);
+
+        Rect test4 = { .x = 0, .y = 41, .w = 7, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test4);
+
+        Rect test5 = { .x = 0, .y = 44, .w = 8, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test5);
+
+        Rect test6 = { .x = 1, .y = 47, .w = 8, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test6);
+
+        Rect test7 = { .x = 2, .y = 50, .w = 8, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test7);
+
+        Rect test8 = { .x = 0, .y = 53, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test8);
+
+        Rect test9 = { .x = 1, .y = 56, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test9);
+
+        Rect test10 = { .x = 2, .y = 59, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test10);
+
+        Rect test11 = { .x = 3, .y = 62, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test11);
+
+        Rect test12 = { .x = 4, .y = 65, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test12);
+
+        Rect test13 = { .x = 5, .y = 68, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test13);
+
+        Rect test14 = { .x = 6, .y = 71, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test14);
+
+        Rect test15 = { .x = 7, .y = 74, .w = 1, .h = 2 };
+        backend_set_color(COLOR_YELLOW);
+        backend_fill_rect(&test15);
+#       endif
 
         backend_present();
     }

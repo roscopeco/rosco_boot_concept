@@ -25,10 +25,20 @@
 #include "view.h"
 #include "backend.h"
 
-#define BUFFER_SIZE     ((VIEW_VRES * VIEW_HRES))
-#define BUFFER_LONGS    ((BUFFER_SIZE / 4))
+#include "xosera_blit_rects.h"
 
-#define BLIT_COLOR(c)   (((c << 12) | (c << 8) | (c << 4) | c))
+// keep this defined until single-pixel fillrect is fixed for 1 pixel wide rects!
+#define HACKED_LINE_DRAW
+
+#define LINE_WIDTH_WORDS            ((VIEW_HRES >> 2))
+
+#define BUFFER_SIZE                 ((VIEW_VRES * VIEW_HRES))
+#define BUFFER_LONGS                ((BUFFER_SIZE / 4))
+
+#define BLIT_COLOR(c)               (((c << 12) | (c << 8) | (c << 4) | c))
+#ifdef TEST_PATTERN_DEBUG
+#define BLIT_RULER(c)               (((c << 12) | (c << 4)))
+#endif
 
 #define XO_COLOR_BLACK              0xF000
 #define XO_COLOR_WHITE              0xFFFF
@@ -45,6 +55,10 @@
 
 #define XO_MAIN_FONT_ADDR           0x9600
 #define XO_SMALL_FONT_ADDR          0xd600
+
+#ifdef TEST_PATTERN_DEBUG
+bool use_ruler = false;
+#endif
 
 volatile bool xosera_flip = false;
 volatile uint32_t xosera_current_page = XO_PAGE_0_ADDR;
@@ -212,16 +226,13 @@ void backend_text_write(const char *str, int x, int y, __attribute__((unused)) c
 
     xv_prep();
 
-    uint16_t line_width_words = VIEW_HRES / 4;
-    uint16_t width_words = font_width / 4;
-
-    uint16_t line_mod = (VIEW_HRES / 4) - width_words;
-
+    uint16_t font_width_words = pixels_to_words(font_width);
+    uint16_t line_mod = LINE_WIDTH_WORDS - font_width_words;
     uint16_t color_comp = ~(BLIT_COLOR(current_color));
 
     while ((c = *str++)) {
         const uint16_t font_ptr = XO_MAIN_FONT_ADDR + (c * font_height * 2);
-        uint16_t start_word = y * line_width_words + x / 4;
+        uint16_t start_word = xosera_rect_start_word_v(x, y, LINE_WIDTH_WORDS);
 
 #ifdef OPTIMISTIC_BLITTER
         xwait_blit_ready();
@@ -232,11 +243,11 @@ void backend_text_write(const char *str, int x, int y, __attribute__((unused)) c
         xreg_setw(BLIT_XOR,   0x0000);                          // xor with 0x0000
         xreg_setw(BLIT_MOD_S, 0x0000);                          // source data is contiguous
         xreg_setw(BLIT_SRC_S, font_ptr);                        // fill with current color
-        xreg_setw(BLIT_MOD_D, line_mod);                        // No skip after each line - clear full screen
+        xreg_setw(BLIT_MOD_D, line_mod);                        // Skip to correct start word on next line
         xreg_setw(BLIT_DST_D, xosera_current_page + start_word);// Start at correct place for text
         xreg_setw(BLIT_SHIFT, 0xFF00);                          // No blit shift
         xreg_setw(BLIT_LINES, font_height - 1);                 // Whole font height (8 or 16)
-        xreg_setw(BLIT_WORDS, width_words - 1);                 // Full font width (2 words)
+        xreg_setw(BLIT_WORDS, font_width_words - 1);            // Full font width
 
 #ifndef OPTIMISTIC_BLITTER
         xwait_blit_done();
@@ -301,24 +312,27 @@ static inline void rect_blit(
 void backend_draw_rect(Rect *rect) {    
     Rect line_rect;
 
+#ifdef HACKED_LINE_DRAW
     uint16_t color = BLIT_COLOR(current_color);
-
-    uint16_t line_width_words = VIEW_HRES >> 2;
 
     uint16_t x_start = rect->x;
     uint16_t x_end = rect->x + rect->w - 1;
     
-    uint16_t left_start_word = rect->y * line_width_words + (x_start >> 2);
-    uint16_t right_start_word = rect->y * line_width_words + (x_end  >> 2);
+    // Confusingly, left and right here refer to the left and right line of the rect,
+    // **not** the left and right nibble masks in the blit shift register - we're
+    // calculating two left-nibble masks...
+    //
+    uint16_t left_start_word = xosera_rect_start_word_v(x_start, rect->y, LINE_WIDTH_WORDS);
+    uint16_t right_start_word = xosera_rect_start_word_v(x_end, rect->y, LINE_WIDTH_WORDS);
 
-    uint16_t left_pixel_nibble = x_start - (x_start >> 2 << 2);
-    uint16_t right_pixel_nibble = x_end - (x_end >> 2 << 2);
+    uint16_t left_pixel_nibble = x_start - pixel_to_word(x_start);
+    uint16_t right_pixel_nibble = x_end - pixel_to_word(x_end);
 
     uint16_t left_mask = (1 << (3-left_pixel_nibble));
     uint16_t right_mask = (1 << (3-right_pixel_nibble));
 
-    uint16_t left_blit_shift = (left_mask << 12) | (left_mask << 8);
-    uint16_t right_blit_shift = (right_mask << 12) | (right_mask << 8);
+    uint16_t left_blit_shift = blit_shift(left_mask, left_mask, 0);
+    uint16_t right_blit_shift = blit_shift(right_mask, right_mask, 0);
 
 #ifdef BLIT_DEBUG
     printf("Unfilled rect: (%d, %d) (%d wide to %d)\n", x_start, rect->y, rect->w, x_end);
@@ -332,7 +346,7 @@ void backend_draw_rect(Rect *rect) {
     // left line
     rect_blit(
         color,
-        line_width_words - 1,
+        LINE_WIDTH_WORDS - 1,       /* -1 for 1px vertical line width */
         left_start_word,
         left_blit_shift,
         rect->h,
@@ -342,12 +356,27 @@ void backend_draw_rect(Rect *rect) {
     // right line
     rect_blit(
         color,
-        line_width_words - 1,
+        LINE_WIDTH_WORDS - 1,       /* -1 for 1px vertical line width */
         right_start_word,
         right_blit_shift,
         rect->h,
         1
     );
+#else
+    // left line
+    line_rect.x = rect->x;
+    line_rect.y = rect->y;
+    line_rect.w = 1;
+    line_rect.h = rect->h;    
+    backend_fill_rect(&line_rect);
+
+    // right line
+    line_rect.x = rect->x + rect->w;
+    line_rect.y = rect->y;
+    line_rect.w = 1;
+    line_rect.h = rect->h;    
+    backend_fill_rect(&line_rect);
+#endif
 
     // top line
     line_rect.x = rect->x;
@@ -366,35 +395,33 @@ void backend_draw_rect(Rect *rect) {
 
 // TODO cannot handle rects < 1 word wide!
 void backend_fill_rect(Rect *rect) {
-    uint16_t color = BLIT_COLOR(current_color);
-    uint16_t x_end = rect->x + rect->w - 1;
+    uint16_t color;
 
-    uint16_t line_width_words = VIEW_HRES >> 2;
-    uint16_t start_word = rect->y * line_width_words + (rect->x >> 2);
-    uint16_t width_words = rect->w >> 2;
-
-    uint16_t line_mod = line_width_words - width_words;
-
-    uint16_t blit_shift = 0xFF00;
-    uint16_t lb_mask = 0xF000, rb_mask = 0x0F00;
-
-    uint16_t left_boundary = rect->x - (rect->x >> 2 << 2);
-    uint16_t right_boundary = x_end - (x_end >> 2 << 2);
-
-    if (left_boundary) {
-        lb_mask = ~((((1 << left_boundary) - 1) << (4 - left_boundary))) << 12;
+#ifdef TEST_PATTERN_DEBUG
+    if (use_ruler) {
+        color = BLIT_RULER(current_color);        
+    } else {
+#endif
+        color = BLIT_COLOR(current_color);
+#ifdef TEST_PATTERN_DEBUG
     }
+#endif
 
-    if (right_boundary) {
-        rb_mask = (((1 << right_boundary) - 1) << (4 - right_boundary)) << 8;
+    uint16_t start_word = xosera_rect_start_word(rect, LINE_WIDTH_WORDS);
+    uint16_t width_words = pixels_to_words(rect->w) + 1;
+
+    if (rect->w & SUBPIXEL_MASK) {
+        // Need a conditional extra word to cover "overspill" pixels when 
+        // not finishing on a word boundary...
         width_words += 1;
-        line_mod -= 1;
     }
 
-    blit_shift &= (lb_mask | rb_mask);
+    uint16_t line_mod = LINE_WIDTH_WORDS - width_words;
+
+    uint16_t blit_shift = xosera_fill_rect_blit_shift(rect);
 
 #ifdef BLIT_DEBUG
-    printf("[%d, %d -> %d, %d]: BLIT: 0x%04x word(s); BLITSHIFT: 0x%04x [LB = 0x%01x : RB = 0x%01x]\n", rect->x, rect->y, rect->w, rect->h, width_words, blit_shift, left_boundary, right_boundary);
+    printf("[%d, %d -> %d, %d]: BLIT: 0x%04x word(s); BLITSHIFT: 0x%04x\n", rect->x, rect->y, rect->w, rect->h, width_words, blit_shift);
 #endif
 
     rect_blit(
