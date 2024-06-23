@@ -25,7 +25,7 @@
 /*
  * Resolution-specific defines
  */
-#if VIEW_HRES == 320
+#if (VIEW_HRES == 320) 
 #ifdef ALWAYS_BIZCAT
 #include "bizcat_font.h"
 #else
@@ -34,11 +34,33 @@
 #define BOX_WIDTH       ((VIEW_HRES/1.4))       /* Width of the box */
 #define LINE_HEIGHT_EX  2                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   38                      /* Max characters in copyright before overflow */
-#elif VIEW_HRES == 640
+#elif (VIEW_HRES == 424)
+#ifdef ALWAYS_BIZCAT
 #include "bizcat_font.h"
+#else
+#include "topaz_font.h"
+#endif
+#define BOX_WIDTH       ((VIEW_HRES/1.8))       /* Width of the box */
+#define LINE_HEIGHT_EX  2                       /* Just allows line height adjustment per resolution */
+#define COPYRIGHT_MAX   48                      /* Max characters in copyright before overflow */
+#elif (VIEW_HRES == 640)
+#ifdef ALWAYS_TOPAZ
+#include "topaz_font.h"
+#else
+#include "bizcat_font.h"
+#endif
 #define BOX_WIDTH       ((VIEW_HRES/1.8))       /* Width of the box */
 #define LINE_HEIGHT_EX  0                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   58                      /* Max characters in copyright before overflow */
+#elif (VIEW_HRES == 848)
+#ifdef ALWAYS_TOPAZ
+#include "topaz_font.h"
+#else
+#include "bizcat_font.h"
+#endif
+#define BOX_WIDTH       ((VIEW_HRES/3.0))       /* Width of the box */
+#define LINE_HEIGHT_EX  0                       /* Just allows line height adjustment per resolution */
+#define COPYRIGHT_MAX   88                      /* Max characters in copyright before overflow */
 #else
 #error Unknown resolution - add settings to view.h
 #endif

@@ -6,10 +6,10 @@
 #include "view.h"
 #include "backend.h"
 
-#if VIEW_HRES == 320
+#if (VIEW_HRES == 320) || (VIEW_HRES == 424)
 #define VIEW_HSCALE 4.0
 #define VIEW_VSCALE 4.0
-#elif VIEW_HRES == 640
+#elif (VIEW_HRES == 640) || (VIEW_HRES == 848)
 #define VIEW_HSCALE 2.0
 #define VIEW_VSCALE 2.0
 #else

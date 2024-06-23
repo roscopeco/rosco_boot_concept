@@ -15,45 +15,53 @@ EXTRA_LIBS+=
 
 ifeq ($(ENABLE_ANIM),true)
 EXTRA_CFLAGS+=-DENABLE_ANIM
-export ENABLE_ANIM=true
-else
-export ENABLE_ANIM=false
 endif
+export ENABLE_ANIM
 
 ifeq ($(TEST_ANIM),true)
 EXTRA_CFLAGS+=-DSHOW_TEST_ANIM
-export TEST_ANIM=true
-else
-export TEST_ANIM=false
 endif
+export TEST_ANIM
 
 ifeq ($(ENABLE_TIMER),true)
 EXTRA_CFLAGS+=-DENABLE_TIMER
-export ENABLE_TIMER=true
-else
-export ENABLE_TIMER=false
 endif
+export ENABLE_TIMER
 
 ifeq ($(MODEL_DEBUG),true)
 EXTRA_CFLAGS+=-DMODEL_DEBUG
-export MODEL_DEBUG=true
-else
-export MODEL_DEBUG=false
 endif
+export MODEL_DEBUG
 
 ifeq ($(BLIT_DEBUG),true)
 EXTRA_CFLAGS+=-DBLIT_DEBUG
-export BLIT_DEBUG=true
-else
-export BLIT_DEBUG=false
 endif
+export BLIT_DEBUG
 
 ifeq ($(TEST_PATTERN),true)
 EXTRA_CFLAGS+=-DTEST_PATTERN_DEBUG
-export TEST_PATTERN=true
-else
-export TEST_PATTERN=false
 endif
+export TEST_PATTERN
+
+ifeq ($(BIZCAT),true)
+EXTRA_CFLAGS+=-DALWAYS_BIZCAT
+endif
+export BIZCAT
+
+ifeq ($(TOPAZ),true)
+EXTRA_CFLAGS+=-DALWAYS_TOPAZ
+endif
+export TOPAZ
+
+ifneq ($(HRES),)
+EXTRA_CFLAGS+=-DVIEW_HRES=$(HRES)
+endif
+export HRES
+
+ifneq ($(VRES),)
+EXTRA_CFLAGS+=-DVIEW_VRES=$(VRES)
+endif
+export VRES
 
 .PHONY: all clean tests
 

@@ -27,6 +27,10 @@
 
 #include "xosera_blit_rects.h"
 
+#if (VIEW_HRES == 640) || (VIEW_HRES == 848)
+#error Xosera backend does not currently support high-resolution mode
+#endif
+
 // keep this defined until single-pixel fillrect is fixed for 1 pixel wide rects!
 #define HACKED_LINE_DRAW
 
@@ -50,11 +54,19 @@
 #define XO_COLOR_ITEM_TEXT          0xF111
 #define XO_COLOR_ITEM_HILITE_TEXT   0xFEEE
 
+#if VIEW_HRES == 320
 #define XO_PAGE_0_ADDR              0x0000
 #define XO_PAGE_1_ADDR              0x4B00
-
 #define XO_MAIN_FONT_ADDR           0x9600
-#define XO_SMALL_FONT_ADDR          0xd600
+#define XO_SMALL_FONT_ADDR          0xb600
+#elif VIEW_HRES == 424
+#define XO_PAGE_0_ADDR              0x0000
+#define XO_PAGE_1_ADDR              0x6360
+#define XO_MAIN_FONT_ADDR           0xC6C0
+#define XO_SMALL_FONT_ADDR          0xE6C0
+#else
+#error Unknown resolution for Xosera backend - please configure in xosera_backed.c
+#endif
 
 #ifdef TEST_PATTERN_DEBUG
 bool use_ruler = false;
@@ -141,8 +153,14 @@ static uint32_t expand_8_pixel_font_line(uint8_t line) {
 bool backend_init() {
     xv_prep();
 
+#   if VIEW_HRES == 320
     dprintf("Calling xosera_init(XINIT_CONFIG_640x480)...");
     bool success = xosera_init(XINIT_CONFIG_640x480);
+#   elif VIEW_HRES == 424
+    dprintf("Calling xosera_init(XINIT_CONFIG_848x480)...");
+    bool success = xosera_init(XINIT_CONFIG_848x480);
+#   endif
+
     dprintf("%s (%dx%d)\n\n", success ? "succeeded" : "FAILED", xosera_vid_width(), xosera_vid_height());
 
     if (!success) {

@@ -26,6 +26,22 @@ ifeq ($(TEST_PATTERN),true)
 EXTRA_CFLAGS+=-DTEST_PATTERN_DEBUG
 endif
 
+ifeq ($(BIZCAT),true)
+EXTRA_CFLAGS+=-DALWAYS_BIZCAT
+endif
+
+ifeq ($(TOPAZ),true)
+EXTRA_CFLAGS+=-DALWAYS_TOPAZ
+endif
+
+ifneq ($(HRES),)
+EXTRA_CFLAGS+=-DVIEW_HRES=$(HRES)
+endif
+
+ifneq ($(VRES),)
+EXTRA_CFLAGS+=-DVIEW_VRES=$(VRES)
+endif
+
 .PHONY: all clean
 
 all: test
