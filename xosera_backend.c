@@ -64,7 +64,7 @@ volatile bool xosera_flip = false;
 volatile uint32_t xosera_current_page = XO_PAGE_0_ADDR;
 
 static uint8_t current_color;
-static volatile uint32_t *tick_cnt = (uint32_t*)0x408;
+static volatile uint32_t *tick_cnt = (uint32_t*)0x40c;
 
 static void dputc(char c) {
 #ifndef __INTELLISENSE__
