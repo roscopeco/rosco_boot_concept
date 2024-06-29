@@ -43,7 +43,7 @@
  * specify HRES, then VRES will be set accordingly.
  */
 #ifndef VIEW_HRES
-#   define VIEW_HRES   320
+#   define VIEW_HRES   424
 #endif
 
 #ifndef VIEW_VRES
