@@ -41,6 +41,9 @@ void backend_draw_rect(Rect *rect);
 void backend_fill_rect(Rect *rect);
 void backend_present(void);
 uint32_t backend_get_ticks(void);
+uint32_t backend_get_cpu(void);
+uint32_t backend_get_cpu_mhz(void);
+uint32_t backend_get_memsize(void);
 BACKEND_EVENT backend_poll_event(void);
 void backend_done(void);
 

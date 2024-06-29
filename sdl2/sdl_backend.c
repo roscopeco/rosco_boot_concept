@@ -38,7 +38,7 @@ static SDL_Color colors[] = {
     { 0x00, 0x00, 0x00, 0xff },     //   ...
 };
 
-bool backend_init() {
+bool backend_init(void) {
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("The Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIEW_HRES * VIEW_HSCALE, VIEW_VRES * VIEW_VSCALE, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -50,7 +50,7 @@ bool backend_init() {
     return true;
 }
 
-void backend_clear() {
+void backend_clear(void) {
     SDL_RenderClear(renderer);
 }
 
@@ -84,7 +84,7 @@ void backend_text_write(const char *str, int x, int y, const uint8_t *font, int 
     }
 }
 
-BACKEND_EVENT backend_poll_event() {
+BACKEND_EVENT backend_poll_event(void) {
     SDL_Event event;
 
     if (SDL_PollEvent(&event)) {
@@ -112,10 +112,22 @@ BACKEND_EVENT backend_poll_event() {
     return NONE;
 }
 
-uint32_t backend_get_ticks() {
+uint32_t backend_get_ticks(void) {
     struct timeval te; 
     gettimeofday(&te, NULL);
     return te.tv_sec*100 + te.tv_usec/10000; // calculate 1/100th ticks
+}
+
+uint32_t backend_get_cpu(void) {
+    return 68010;
+}
+
+uint32_t backend_get_cpu_mhz(void) {
+    return 10;
+}
+
+uint32_t backend_get_memsize(void) {
+    return 14680064;
 }
 
 void backend_draw_rect(Rect *rect) {
@@ -128,11 +140,11 @@ void backend_fill_rect(Rect *rect) {
     SDL_RenderFillRect(renderer, &sdl_rect);
 }
 
-void backend_present() {
+void backend_present(void) {
     SDL_RenderPresent(renderer);
 }
 
-void backend_done() {
+void backend_done(void) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

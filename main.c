@@ -48,11 +48,16 @@ static TestAnimation test_animation_2;
 #endif
 
 int main(void) {
+    if (!backend_init()) {
+        printf("Backend init failed\n");
+        return 2;
+    }
+
     model.n_items = n_menu_items;
     model.items = menu_items;
-    model.mem_count = 14680064;
-    model.cpu = 68010;
-    model.mhz = 10;
+    model.mem_count = backend_get_memsize();
+    model.cpu = backend_get_cpu();
+    model.mhz = backend_get_cpu_mhz();
     model.timer_secs_left = 5;
 
 #ifdef ENABLE_ANIM
@@ -67,11 +72,6 @@ int main(void) {
     list_insert_after((ListNode*)&test_animation_2, &model.animations_back);
 #endif
 #endif
-
-    if (!backend_init()) {
-        printf("Backend init failed\n");
-        return 2;
-    }
 
     view_init(&view, &model);
 

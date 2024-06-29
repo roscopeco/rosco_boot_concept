@@ -77,6 +77,8 @@ volatile uint32_t xosera_current_page = XO_PAGE_0_ADDR;
 
 static uint8_t current_color;
 static volatile uint32_t *tick_cnt = (uint32_t*)0x40c;
+static volatile uint32_t *cpuinfo = (uint32_t*)0x41c;
+static volatile uint32_t *memsize = (uint32_t*)0x414;
 
 static void dputc(char c) {
 #ifndef __INTELLISENSE__
@@ -150,7 +152,7 @@ static uint32_t expand_8_pixel_font_line(uint8_t line) {
     return result;
 }
 
-bool backend_init() {
+bool backend_init(void) {
     xv_prep();
 
 #   if VIEW_HRES == 320
@@ -205,7 +207,7 @@ bool backend_init() {
     return true;
 }
 
-void backend_clear() {
+void backend_clear(void) {
     xv_prep();
 
     uint16_t color = BLIT_COLOR(current_color);
@@ -280,7 +282,7 @@ void backend_text_write(const char *str, int x, int y, __attribute__((unused)) c
     }
 }
 
-BACKEND_EVENT backend_poll_event() {
+BACKEND_EVENT backend_poll_event(void) {
     if (mcCheckchar()) {
         switch (mcReadchar()) {
         case 'w':
@@ -296,8 +298,33 @@ BACKEND_EVENT backend_poll_event() {
     return NONE;
 }
 
-uint32_t backend_get_ticks() {
+uint32_t backend_get_ticks(void) {
     return *tick_cnt;
+}
+
+uint32_t backend_get_cpu(void) {
+    switch (*cpuinfo & 0xE0000000) {
+    case 0x20000000:
+        return 68010;
+    case 0x40000000:
+        return 68020;
+    case 0x60000000:
+        return 68030;
+    case 0x80000000:
+        return 68040;
+    case 0xA0000000:
+        return 68060;
+    default:
+        return 68000;
+    }
+}
+
+uint32_t backend_get_cpu_mhz(void) {
+    return (*cpuinfo & 0x1FFFFFFF) / 10000;
+}
+
+uint32_t backend_get_memsize(void) {
+    return *memsize;
 }
 
 static inline void rect_blit(
@@ -457,7 +484,7 @@ void backend_fill_rect(Rect *rect) {
     );
 }
 
-void backend_present() {
+void backend_present(void) {
     xv_prep();
 
     while (xosera_flip) {
@@ -477,6 +504,6 @@ void backend_present() {
     // TODO write ISR to do the flip in vblank...
 }
 
-void backend_done() {
+void backend_done(void) {
     // This space intentionally left blank
 }
