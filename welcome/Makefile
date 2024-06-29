@@ -21,9 +21,10 @@ IMAGEBIN=$(IMAGEBASE).o
 $(ELF): $(IMAGEBIN)
 
 $(IMAGEBIN): $(IMAGESRC)
-	$(OBJCOPY) -I binary -B m68k -O elf32-m68k                               \
-		--rename-section .data=.rodata                                       \
-		--redefine-sym _binary_$(IMAGEBASE)_$(IMAGEEXT)_start=_image_start   \
-		--redefine-sym _binary_$(IMAGEBASE)_$(IMAGEEXT)_end=_image_end       \
-		--redefine-sym _binary_$(IMAGEBASE)_$(IMAGEEXT)_size=_image_size     \
-		$< $@
+	$(LD) -T bin_obj.ld -r -o $@ -b binary $<
+
+clean: clean-bins
+
+clean-bins:
+	rm -rf $(IMAGEBIN)
+
