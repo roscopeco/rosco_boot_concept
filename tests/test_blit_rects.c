@@ -167,7 +167,9 @@ void test_blit_nibble_mask_0x_w0(void) {
     Rect rect = { .x = 0, .y = 0, .w = 0, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0xf000, result);
 }
 
@@ -180,7 +182,9 @@ void test_blit_nibble_mask_0x_w4(void) {
     Rect rect = { .x = 0, .y = 0, .w = 4, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0xf000, result);
 }
 
@@ -194,7 +198,9 @@ void test_blit_nibble_mask_4x_w4(void) {
     Rect rect = { .x = 4, .y = 0, .w = 4, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0xf000, result);
 }
 
@@ -207,7 +213,9 @@ void test_blit_nibble_mask_1x_w9(void) {
     Rect rect = { .x = 1, .y = 0, .w = 9, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x7c00, result);
 }
 
@@ -219,7 +227,9 @@ void test_blit_nibble_mask_1x_w13(void) {
     Rect rect = { .x = 1, .y = 0, .w = 13, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x7c00, result);
 }
 
@@ -235,7 +245,9 @@ void test_blit_nibble_mask_0x_w1(void) {
     Rect rect = { .x = 0, .y = 0, .w = 1, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0xf800, result);    /* applies 0x8000 */
 }
 
@@ -248,7 +260,9 @@ void test_blit_nibble_mask_1x_w1(void) {
     Rect rect = { .x = 1, .y = 0, .w = 1, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x7c00, result);    /* applies 0x4000 */
 }
 
@@ -261,7 +275,9 @@ void test_blit_nibble_mask_2x_w1(void) {
     Rect rect = { .x = 2, .y = 0, .w = 1, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x3e00, result);    /* applies 0x2000 */
 }
 
@@ -274,7 +290,9 @@ void test_blit_nibble_mask_3x_w1(void) {
     Rect rect = { .x = 3, .y = 0, .w = 1, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x1000, result);
 }
 
@@ -287,7 +305,9 @@ void test_blit_nibble_mask_0x_w2(void) {
     Rect rect = { .x = 0, .y = 0, .w = 2, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0xfc00, result);    /* applies 0xc000 */
 }
 
@@ -300,7 +320,9 @@ void test_blit_nibble_mask_1x_w2(void) {
     Rect rect = { .x = 1, .y = 0, .w = 2, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x7e00, result);   /* applies 0x6000 */
 }
 
@@ -313,7 +335,9 @@ void test_blit_nibble_mask_2x_w2(void) {
     Rect rect = { .x = 2, .y = 0, .w = 2, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x3000, result);    /* applies 0x3000 */
 }
 
@@ -326,7 +350,9 @@ void test_blit_nibble_mask_3x_w2(void) {
     Rect rect = { .x = 3, .y = 0, .w = 2, .h = 1 };
 
     uint16_t result = xosera_fill_rect_blit_shift(&rect);
+    uint16_t resultv = xosera_fill_rect_blit_shift_v(rect.x, rect.w);
 
+    TEST_ASSERT_EQUAL_HEX16(result, resultv);
     TEST_ASSERT_EQUAL_HEX16(0x1800, result);
 }
 

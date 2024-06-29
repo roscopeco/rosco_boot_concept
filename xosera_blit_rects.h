@@ -40,7 +40,7 @@ static inline uint16_t xosera_rect_start_word_v(uint16_t x, uint16_t y, uint16_t
     return y * line_width_words + pixels_to_words(x);
 }
 
-static inline uint16_t xosera_fill_rect_blit_shift(Rect *rect) {
+static inline uint16_t xosera_fill_rect_blit_shift_v(uint16_t x, uint16_t w) {
     uint16_t lb_mask;
     uint16_t rb_mask;
 
@@ -59,14 +59,18 @@ static inline uint16_t xosera_fill_rect_blit_shift(Rect *rect) {
     //
     // Simple and elegant, thanks to @Xark 😀
     //
-    lb_mask = (BLIT_SHIFT_NIBBLE_MASK_LEFT >> (rect->x & SUBPIXEL_MASK)) & BLIT_SHIFT_NIBBLE_MASK_LEFT;
-    rb_mask = (BLIT_SHIFT_NIBBLE_MASK_LEFT >> ((rect->x + rect->w) & SUBPIXEL_MASK)) & BLIT_SHIFT_NIBBLE_MASK_RIGHT;
+    lb_mask = (BLIT_SHIFT_NIBBLE_MASK_LEFT >> (x & SUBPIXEL_MASK)) & BLIT_SHIFT_NIBBLE_MASK_LEFT;
+    rb_mask = (BLIT_SHIFT_NIBBLE_MASK_LEFT >> ((x + w) & SUBPIXEL_MASK)) & BLIT_SHIFT_NIBBLE_MASK_RIGHT;
 
 #ifdef BLIT_DEBUG
     printf("LM: 0x%04x\nRM: 0x%04x\n", lb_mask, rb_mask);
 #endif
 
     return (lb_mask | rb_mask);
+}
+
+static inline uint16_t xosera_fill_rect_blit_shift(Rect *rect) {
+    return xosera_fill_rect_blit_shift_v(rect->x, rect->w);
 }
 
 #endif

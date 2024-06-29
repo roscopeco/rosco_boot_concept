@@ -239,12 +239,17 @@ void backend_draw_pixel(__attribute__((unused)) int x, __attribute__((unused)) i
 }
 
 void backend_text_write(const char *str, int x, int y, __attribute__((unused)) const uint8_t *font, int font_width, int font_height) {
+    const uint16_t blit_shift_s[4] = {0xF000, 0x7801, 0x3C02, 0x1E03};
+
     // TODO support different font (for small text)
     unsigned char c;
 
     xv_prep();
 
-    uint16_t font_width_words = pixels_to_words(font_width);
+    uint16_t font_width_words = pixels_to_words(font_width) + 1;
+
+    uint16_t blit_shift = blit_shift_s[x & 0x03]; //xosera_fill_rect_blit_shift_v(x, font_width) | shift;
+
     uint16_t line_mod = LINE_WIDTH_WORDS - font_width_words;
     uint16_t color_comp = ~(BLIT_COLOR(current_color));
 
@@ -259,11 +264,11 @@ void backend_text_write(const char *str, int x, int y, __attribute__((unused)) c
         xreg_setw(BLIT_CTRL,  0x0010);                          // 0 transp, source mem
         xreg_setw(BLIT_ANDC,  color_comp);                      // and-complement (0xffff)
         xreg_setw(BLIT_XOR,   0x0000);                          // xor with 0x0000
-        xreg_setw(BLIT_MOD_S, 0x0000);                          // source data is contiguous
+        xreg_setw(BLIT_MOD_S, 0xFFFF);                          // source data is contiguous, -1 for extra word
         xreg_setw(BLIT_SRC_S, font_ptr);                        // fill with current color
         xreg_setw(BLIT_MOD_D, line_mod);                        // Skip to correct start word on next line
         xreg_setw(BLIT_DST_D, xosera_current_page + start_word);// Start at correct place for text
-        xreg_setw(BLIT_SHIFT, 0xFF00);                          // No blit shift
+        xreg_setw(BLIT_SHIFT, blit_shift);                      // Use computed shift
         xreg_setw(BLIT_LINES, font_height - 1);                 // Whole font height (8 or 16)
         xreg_setw(BLIT_WORDS, font_width_words - 1);            // Full font width
 

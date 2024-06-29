@@ -277,6 +277,12 @@ void view_repaint(View *view, bool force) {
         Rect test15 = { .x = 7, .y = 74, .w = 1, .h = 2 };
         backend_set_color(COLOR_YELLOW);
         backend_fill_rect(&test15);
+
+        backend_text_write("TEST[0,150]", 0, 150, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[1,170]", 1, 170, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[2,190]", 2, 190, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[3,210]", 3, 210, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[4,230]", 4, 230, FONT, FONT_WIDTH, FONT_HEIGHT);
 #       endif
 
         backend_present();
