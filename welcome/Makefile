@@ -16,15 +16,16 @@ EXTRA_LIBS+=
 IMAGEBASE?=splash
 IMAGEEXT=pcx
 IMAGESRC=$(IMAGEBASE).$(IMAGEEXT)
-IMAGEBIN=$(IMAGEBASE).o
 
-$(ELF): $(IMAGEBIN)
+kmain.o: splash.h
 
-$(IMAGEBIN): $(IMAGESRC)
-	$(LD) -T bin_obj.ld -r -o $@ -b binary $<
+splash.h: $(IMAGESRC)
+	echo "#ifndef _SPLASH_DATA_H" > $@
+	echo "#define _SPLASH_DATA_H" >> $@
+	xxd -i $(IMAGESRC) | sed -E "s/$(IMAGEBASE)_$(IMAGEEXT)/splash_data/g" >> $@
+	echo "#endif" >> $@
 
-clean: clean-bins
+clean: clean-data
 
-clean-bins:
-	rm -rf $(IMAGEBIN)
-
+clean-data:
+	rm -f splash.h
