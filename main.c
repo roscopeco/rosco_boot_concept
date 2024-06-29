@@ -28,11 +28,10 @@
 
 #include "backend.h"
 
-static int n_menu_items = 5;
+static int n_menu_items = 4;
 static char* menu_items[] = {
-    "SD card loader & shell",
-    "Kermit loader",
-    "ROM BASIC",
+    "Program loader",
+    "MicroPython",
     "System configuration",
     "Memory check & diagnostic",
 };
