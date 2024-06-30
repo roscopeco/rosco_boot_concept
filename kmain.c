@@ -13,9 +13,13 @@
  * ------------------------------------------------------------
  */
 
+#include "intro.h"
+
 int main();
 
 void kmain() {
+    intro();
+    intro_end();
     main();
 }
 

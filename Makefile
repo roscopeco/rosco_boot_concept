@@ -10,7 +10,7 @@ XOSERA_M68K_API?=../xosera_m68k_api
 # use generic common make rules for Xosera + rosco_m68k build
 include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 
-EXTRA_CFLAGS+=-std=c2x -Wno-format
+EXTRA_CFLAGS+=-std=c2x -Wno-format -Iwelcome/include
 EXTRA_LIBS+=
 
 ifeq ($(ENABLE_ANIM),true)
@@ -65,15 +65,23 @@ export VRES
 
 .PHONY: all clean tests
 
+$(ELF): welcome/intro-lib.a
+
 all: tests $(BINARY) $(DISASM) sdl2/test
 
-clean: cleansdl cleantests
+clean: cleanintro cleansdl cleantests
 
 tests: tests/Makefile	
 	make -C tests test
 
 sdl2/test: tests sdl2/Makefile $(OBJECTS)
 	make -C sdl2 test
+
+welcome/intro-lib.a:
+	make -C welcome intro-lib.a
+
+cleanintro:
+	make -C welcome clean
 
 cleantests:
 	make -C tests clean

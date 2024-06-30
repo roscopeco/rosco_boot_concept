@@ -25,7 +25,7 @@
 
 #include "splash.h"
 
-//#define COPPER_GLITCH
+#define COPPER_GLITCH
 
 #define ENTER_GLITCH_CHANCE     99990
 #define EXIT_GLITCH_CHANCE      92500
@@ -148,7 +148,7 @@ void intro(void) {
 void intro_end(void) {
 #   ifdef FADE_OUT
     xv_prep();
-    
+
     for (int i = 0; i < 16; i++) {
         xwait_vblank();
 
@@ -163,6 +163,13 @@ void intro_end(void) {
             xwait_not_vblank();
         }
     }    
+#else
+    xmem_setw_next_addr(XR_COLOR_B_ADDR);
+    for (int i = 0; i < 256; i++) {
+        xmem_setw_next(alpha);
+    }
+
+    mcDelaymsec10(75);
 #   endif
 }
 
