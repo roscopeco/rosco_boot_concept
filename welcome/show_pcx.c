@@ -21,13 +21,17 @@
 #include "pcx.h"
 #include "dprint.h"
 
+#define DEBUG_PCX
+//#define ALPHA_SHIFT_FADE
+//#define PALETTE_SHIFT_FADE
+
 static const char *modes[] = { "Unknown", "Mono/Color", "Grayscale" };
 
 static uint16_t swap(uint16_t be) {
     return ((be & 0xFF00) >> 8) | ((be & 0x00FF) << 8); 
 }
 
-static bool load_palette(uint8_t *buf) {
+static bool load_palette(uint8_t *buf, __attribute__((unused)) uint8_t shift) {
     xv_prep();
 
     if (*buf++ != 0x0C) {
@@ -39,6 +43,9 @@ static bool load_palette(uint8_t *buf) {
         for (int i = 0; i < 256; i++) {
             uint16_t entry = 0;
 
+#ifdef ALPHA_SHIFT_FADE
+            entry |= (1 << shift) << 8;
+#endif
             entry |= ((*buf++ & 0xF0) << 4);
             entry |= (*buf++ & 0xF0);
             entry |= ((*buf++ & 0xF0) >> 4);
@@ -47,7 +54,11 @@ static bool load_palette(uint8_t *buf) {
             dprintf("Palette %3d: 0x%04x\n", i, entry);
 #endif
 
+#ifdef PALETTE_SHIFT_FADE
+            xmem_setw_next(entry >> shift);
+#else
             xmem_setw_next(entry);
+#endif
         }
 
         return true;
@@ -94,7 +105,7 @@ static bool load_image(uint32_t buf_size, uint8_t *buf) {
     return true;
 }
 
-bool show_pcx(uint32_t buf_size, uint8_t *buf) {
+bool show_pcx(uint32_t buf_size, uint8_t *buf, __attribute__((unused)) uint8_t fade_delay) {    
     if (buf_size < 128) {
         dprintf("ERROR: Buffer is too small\n");
         return false;
@@ -110,6 +121,7 @@ bool show_pcx(uint32_t buf_size, uint8_t *buf) {
             return false;
         }
 
+#ifdef DEBUG_PCX
         dprintf("Header      : 0x%02x\n", hdr->header);
         dprintf("Version     : 0x%02x\n", hdr->version);
         dprintf("Encoding    : 0x%02x\n", hdr->encoding);
@@ -124,17 +136,48 @@ bool show_pcx(uint32_t buf_size, uint8_t *buf) {
         dprintf("H DPI       : %d\n", swap(hdr->h_dpi));
         dprintf("V DPI       : %d\n", swap(hdr->v_dpi));
         dprintf("\n");
+#endif
 
-        
-        if (!load_palette(buf + (buf_size - 769))) {
+#ifdef PALETTE_SHIFT_FADE  
+        if (!load_palette(buf + (buf_size - 769), 16)) {
             dprintf("ERROR: Palette load failed\n");
             return false;
         }
+#endif
+
+#if !defined(PALETTE_SHIFT_FADE) && !defined(ALPHA_SHIFT_FADE)
+
+        if (!load_palette(buf + (buf_size - 769), 0)) {
+            dprintf("ERROR: Palette load failed\n");
+            return false;
+        }
+#endif
 
         if (!load_image(buf_size - 769 - 128, buf + 128)) {
             dprintf("ERROR: Image load failed\n");
             return false;
         }
+
+#if defined(PALETTE_SHIFT_FADE) || defined(ALPHA_SHIFT_FADE)
+        xv_prep();
+        
+        for (int i = 15; i > 0; i--) {
+            if (!load_palette(buf + (buf_size - 769), i)) {
+                dprintf("ERROR: Palette load failed\n");
+                return false;
+            }
+
+            for (int j = 0; j < fade_delay; j++) {
+                xwait_vblank();
+                xwait_not_vblank();
+            }
+        }
+
+        if (!load_palette(buf + (buf_size - 769), 0)) {
+            dprintf("ERROR: Palette load failed\n");
+            return false;
+        }
+#endif
 
         return true;
     }
