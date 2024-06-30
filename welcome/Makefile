@@ -1,8 +1,4 @@
-# Make Xosera test program for rosco_m68k
-#
-# vim: set noet ts=8 sw=8
-# Copyright (c) 2021 Xark
-# MIT LICENSE
+# Make rosco_m68k boostrap intro
 
 # location of xosera_m68k_api
 XOSERA_M68K_API?=../xosera_m68k_api
@@ -13,7 +9,7 @@ include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 EXTRA_CFLAGS+=-std=c2x -Wno-format -Iinclude
 EXTRA_LIBS+=
 
-IMAGEBASE?=welcome
+IMAGEBASE?=rosco_m68k_logo_simple_pixel
 IMAGEEXT=pcx
 IMAGESRC=$(IMAGEBASE).$(IMAGEEXT)
 

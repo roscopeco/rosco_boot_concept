@@ -16,6 +16,9 @@
  * ------------------------------------------------------------
  */
 
+#ifndef __PCX_H
+#define __PCX_H
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -61,3 +64,4 @@ typedef struct {
 
 bool show_pcx(uint32_t buf_size, uint8_t *buf, uint8_t fade_delay);
 
+#endif

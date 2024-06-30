@@ -19,8 +19,36 @@
 entry
 ;            VPOS    #300           ; for rosco_m68k screen only
             MOVI    #$0000,XR_VID_CTRL
+            MOVI    #$0000,XR_PA_H_SCROLL
             HPOS    #H_EOL
             MOVI    #$8000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$8000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$8000,XR_VID_CTRL
+            MOVI    #$000F,XR_PA_H_SCROLL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_PA_H_SCROLL
+            MOVI    #$8000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$8000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$8000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$0000,XR_VID_CTRL
+            HPOS    #H_EOL
+            MOVI    #$8000,XR_VID_CTRL
+            MOVI    #$0004,XR_PA_H_SCROLL
             HPOS    #H_EOL
             BRLT    entry
             VPOS    #$3FF

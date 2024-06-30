@@ -22,7 +22,7 @@
 #include "dprint.h"
 
 #define DEBUG_PCX
-//#define ALPHA_SHIFT_FADE
+#define ALPHA_SHIFT_FADE
 //#define PALETTE_SHIFT_FADE
 
 static const char *modes[] = { "Unknown", "Mono/Color", "Grayscale" };
@@ -43,9 +43,6 @@ static bool load_palette(uint8_t *buf, __attribute__((unused)) uint8_t shift) {
         for (int i = 0; i < 256; i++) {
             uint16_t entry = 0;
 
-#ifdef ALPHA_SHIFT_FADE
-            entry |= (1 << shift) << 8;
-#endif
             entry |= ((*buf++ & 0xF0) << 4);
             entry |= (*buf++ & 0xF0);
             entry |= ((*buf++ & 0xF0) >> 4);
@@ -145,22 +142,21 @@ bool show_pcx(uint32_t buf_size, uint8_t *buf, __attribute__((unused)) uint8_t f
         }
 #endif
 
-#if !defined(PALETTE_SHIFT_FADE) && !defined(ALPHA_SHIFT_FADE)
+        if (!load_image(buf_size - 769 - 128, buf + 128)) {
+            dprintf("ERROR: Image load failed\n");
+            return false;
+        }
 
+#ifndef PALETTE_SHIFT_FADE
         if (!load_palette(buf + (buf_size - 769), 0)) {
             dprintf("ERROR: Palette load failed\n");
             return false;
         }
 #endif
 
-        if (!load_image(buf_size - 769 - 128, buf + 128)) {
-            dprintf("ERROR: Image load failed\n");
-            return false;
-        }
-
-#if defined(PALETTE_SHIFT_FADE) || defined(ALPHA_SHIFT_FADE)
+#ifdef PALETTE_SHIFT_FADE
         xv_prep();
-        
+
         for (int i = 15; i > 0; i--) {
             if (!load_palette(buf + (buf_size - 769), i)) {
                 dprintf("ERROR: Palette load failed\n");
@@ -177,6 +173,24 @@ bool show_pcx(uint32_t buf_size, uint8_t *buf, __attribute__((unused)) uint8_t f
             dprintf("ERROR: Palette load failed\n");
             return false;
         }
+#else
+#ifdef ALPHA_SHIFT_FADE
+        xv_prep();
+        for (int i = 15; i > -1; i--) {
+            xwait_vblank();
+
+            uint16_t alpha = i << 12;
+            xmem_setw_next_addr(XR_COLOR_B_ADDR);
+            for (int i = 0; i < 256; i++) {
+                xmem_setw_next(alpha);
+            }
+
+            for (int j = 0; j < fade_delay - 1; j++) {
+                xwait_vblank();
+                xwait_not_vblank();
+            }
+        }
+#endif
 #endif
 
         return true;
