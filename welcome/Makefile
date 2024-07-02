@@ -12,7 +12,7 @@ include $(XOSERA_M68K_API)/common_xosera_m68k.mk
 EXTRA_CFLAGS+=-std=c2x -Wno-format -Iinclude
 EXTRA_LIBS+=
 
-IMAGEBASE?=welcome
+IMAGEBASE?=rosco_m68k_logo_simple_pixel
 IMAGEEXT=pcx
 IMAGESRC=$(IMAGEBASE).$(IMAGEEXT)
 

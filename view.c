@@ -37,6 +37,9 @@ static char mem_buffer[CHAR_BUF_SIZE];
 static uint8_t cpu_buffer_len;
 static uint8_t copyright_len;
 
+static BACKEND_FONT_COOKIE regular_font;
+static BACKEND_FONT_COOKIE small_font;
+
 #ifdef TEST_PATTERN_DEBUG
 extern bool use_ruler;
 #endif
@@ -51,6 +54,9 @@ void view_init(View *view, Model *model) {
 
     cpu_buffer_len = strnlen(cpu_buffer, CHAR_BUF_SIZE);
     copyright_len = strnlen(COPYRIGHT, COPYRIGHT_MAX);
+
+    regular_font = backend_load_font(FONT, 8, 16, 256);
+    small_font = backend_load_font(NUM_FONT, 8, 8, 6);
 }
 
 void view_recompute_size(View *view, Model *model) {
@@ -130,11 +136,11 @@ void view_repaint(View *view, bool force) {
 
         // Sysinfo header
         backend_set_color(COLOR_BACKGROUND_SHADOW);
-        backend_text_write(mem_buffer, 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
-        backend_text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * FONT_WIDTH) - 6, 6, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(mem_buffer, 6, 6, regular_font, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(cpu_buffer, VIEW_HRES - (cpu_buffer_len * FONT_WIDTH) - 6, 6, regular_font, FONT_WIDTH, FONT_HEIGHT);
 
         // Copyright footer
-        backend_text_write(COPYRIGHT, VIEW_HRES - (copyright_len * FONT_WIDTH) - 6, VIEW_VRES - LINE_HEIGHT, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(COPYRIGHT, VIEW_HRES - (copyright_len * FONT_WIDTH) - 6, VIEW_VRES - LINE_HEIGHT, regular_font, FONT_WIDTH, FONT_HEIGHT);
 
         // Animations (back)
         paint_anim_layer((Animation*)view->model->animations_back.next);
@@ -154,10 +160,10 @@ void view_repaint(View *view, bool force) {
 
         // Header text
         backend_set_color(COLOR_WHITE);
-        backend_text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, regular_font, FONT_WIDTH, FONT_HEIGHT);
 
         backend_set_color(COLOR_YELLOW);
-        backend_text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, regular_font, FONT_WIDTH, FONT_HEIGHT);
 
         // Selection bar
         Rect selection_rect;
@@ -188,7 +194,7 @@ void view_repaint(View *view, bool force) {
             }
 #           endif
 
-            backend_text_write(view->model->items[i], x, y, FONT, FONT_WIDTH, FONT_HEIGHT);
+            backend_text_write(view->model->items[i], x, y, regular_font, FONT_WIDTH, FONT_HEIGHT);
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == current.selection) {
@@ -204,7 +210,7 @@ void view_repaint(View *view, bool force) {
         if (view->model->timer_secs_left) {
             secs_buf[0] = view->model->timer_secs_left;
             backend_set_color(COLOR_YELLOW);
-            backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
+            backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, small_font, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
         }
 #       endif
 
@@ -278,11 +284,11 @@ void view_repaint(View *view, bool force) {
         backend_set_color(COLOR_YELLOW);
         backend_fill_rect(&test15);
 
-        backend_text_write("TEST[0,150]", 0, 150, FONT, FONT_WIDTH, FONT_HEIGHT);
-        backend_text_write("TEST[1,170]", 1, 170, FONT, FONT_WIDTH, FONT_HEIGHT);
-        backend_text_write("TEST[2,190]", 2, 190, FONT, FONT_WIDTH, FONT_HEIGHT);
-        backend_text_write("TEST[3,210]", 3, 210, FONT, FONT_WIDTH, FONT_HEIGHT);
-        backend_text_write("TEST[4,230]", 4, 230, FONT, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[0,150]", 0, 150, regular_font, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[1,170]", 1, 170, regular_font, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[2,190]", 2, 190, regular_font, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[3,210]", 3, 210, regular_font, FONT_WIDTH, FONT_HEIGHT);
+        backend_text_write("TEST[4,230]", 4, 230, regular_font, FONT_WIDTH, FONT_HEIGHT);
 #       endif
 
         backend_present();

@@ -27,11 +27,11 @@
 #endif
 
 #if 0   /** Disabled options **/
+#define ENABLE_TIMER                            /* Should the count-down timer be enabled? */
 #define ALWAYS_TOPAZ                            /* Always use topaz font, even at high resolution */
 #define ALWAYS_BIZCAT                           /* Always use bizcat font, even at low resolution */
 #define ENABLE_ANIM                             /* Should the animation system be enabled? */
 #define SHOW_TEST_ANIM                          /* Should the test animation be displayed? */
-#define ENABLE_TIMER                            /* Should the count-down timer be enabled? */
 #endif
 
 /*

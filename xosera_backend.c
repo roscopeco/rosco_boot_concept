@@ -80,6 +80,8 @@ static volatile uint32_t *tick_cnt = (uint32_t*)0x40c;
 static volatile uint32_t *cpuinfo = (uint32_t*)0x41c;
 static volatile uint32_t *memsize = (uint32_t*)0x414;
 
+static uint16_t next_font_address;
+
 static void dputc(char c) {
 #ifndef __INTELLISENSE__
     __asm__ __volatile__(
@@ -188,19 +190,9 @@ bool backend_init(void) {
     xmem_setw_next(XO_COLOR_ITEM_TEXT);
     xmem_setw_next(XO_COLOR_ITEM_HILITE_TEXT);
 
-    // copy font
-    xm_setw(WR_ADDR, XO_MAIN_FONT_ADDR);
-    for (int i = 0; i < FONT_HEIGHT * 256; i++) {
-        uint32_t expanded_line = expand_8_pixel_font_line(FONT[i]);
-
-        xm_setw(DATA, (uint16_t)((expanded_line & 0xFFFF0000) >> 16));
-        xm_setw(DATA, (uint16_t)(expanded_line & 0x0000FFFF));
-    }
-
-    // TODO copy small num font to XO_NUM_FONT_ADDR
-
     xosera_current_page = XO_PAGE_0_ADDR;
     xosera_flip = false;
+    next_font_address = XO_MAIN_FONT_ADDR;
 
     mcDelaymsec10(200);
 
@@ -240,7 +232,30 @@ void backend_draw_pixel(__attribute__((unused)) int x, __attribute__((unused)) i
     // Currently unused...
 }
 
-void backend_text_write(const char *str, int x, int y, __attribute__((unused)) const uint8_t *font, int font_width, int font_height) {
+BACKEND_FONT_COOKIE backend_load_font(const uint8_t *font, int font_width, int font_height, int char_count) {
+    if (font_width != 8) {
+        // TODO only 8-pixel-wide fonts supported right now
+        return 0;
+    }
+
+    xv_prep();
+
+    // copy font
+    xm_setw(WR_ADDR, next_font_address);
+    for (int i = 0; i < font_height * char_count; i++) {
+        uint32_t expanded_line = expand_8_pixel_font_line(font[i]);
+
+        xm_setw(DATA, (uint16_t)((expanded_line & 0xFFFF0000) >> 16));
+        xm_setw(DATA, (uint16_t)(expanded_line & 0x0000FFFF));
+    }
+
+    BACKEND_FONT_COOKIE cookie = (BACKEND_FONT_COOKIE) next_font_address;
+    next_font_address += 2 * FONT_HEIGHT * 256;
+
+    return cookie;
+}
+
+void backend_text_write(const char *str, int x, int y, BACKEND_FONT_COOKIE font, int font_width, int font_height) {
     const uint16_t blit_shift_s[4] = {0xF000, 0x7801, 0x3C02, 0x1E03};
 
     // TODO support different font (for small text)
@@ -256,7 +271,7 @@ void backend_text_write(const char *str, int x, int y, __attribute__((unused)) c
     uint16_t color_comp = ~(BLIT_COLOR(current_color));
 
     while ((c = *str++)) {
-        const uint16_t font_ptr = XO_MAIN_FONT_ADDR + (c * font_height * 2);
+        const uint16_t font_ptr = ((uint16_t)font) + (c * font_height * 2);
         uint16_t start_word = xosera_rect_start_word_v(x, y, LINE_WIDTH_WORDS);
 
 #ifdef OPTIMISTIC_BLITTER

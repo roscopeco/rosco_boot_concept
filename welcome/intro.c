@@ -1,5 +1,4 @@
 /*
- * vim: set et ts=4 sw=4
  *------------------------------------------------------------
  *                                  ___ ___ _
  *  ___ ___ ___ ___ ___       _____|  _| . | |_
@@ -7,10 +6,10 @@
  * |_| |___|___|___|___|_____|_|_|_|___|___|_,_|
  *                     |_____|
  * ------------------------------------------------------------
- * Copyright (c) 2021 Ross Bamford
+ * Copyright (c) 2024 Ross Bamford
  * MIT License
  *
- * Simple PCX loader demo for Xosera
+ * Rosco boot concept intro screen
  * ------------------------------------------------------------
  */
 
@@ -25,7 +24,7 @@
 
 #include "splash.h"
 
-#define COPPER_GLITCH
+//#define COPPER_GLITCH
 
 #define ENTER_GLITCH_CHANCE     99990
 #define EXIT_GLITCH_CHANCE      92500

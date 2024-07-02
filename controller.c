@@ -86,6 +86,11 @@ static bool update_timers(__attribute__((unused)) Model *model) {
                 model->last_1s_timer_ticks = backend_get_ticks();
                 model->timer_secs_left--;
             }
+
+            if (!model->timer_secs_left) {
+                // expired - return true.
+                return true;
+            }
         }
     }
 #endif

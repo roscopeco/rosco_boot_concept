@@ -63,11 +63,20 @@ void backend_draw_pixel(int x, int y) {
     SDL_RenderDrawPoint(renderer, x, y);
 }
 
-void backend_text_write(const char *str, int x, int y, const uint8_t *font, int font_width, int font_height) {
+BACKEND_FONT_COOKIE backend_load_font(
+    const uint8_t *font, 
+    __attribute__((unused)) int font_width, 
+    __attribute__((unused)) int font_height, 
+    __attribute__((unused)) int char_count
+) {
+    return (BACKEND_FONT_COOKIE)font;
+}
+
+void backend_text_write(const char *str, int x, int y, BACKEND_FONT_COOKIE font, int font_width, int font_height) {
     unsigned char c;
 
     while ((c = *str++)) {
-        const uint8_t *font_ptr = font + (c * font_height);
+        const uint8_t *font_ptr = ((uint8_t*)font) + (c * font_height);
 
         for (int dy = 0; dy < font_height; dy++) {
             for (int dx = 0; dx < font_width; dx++) {
