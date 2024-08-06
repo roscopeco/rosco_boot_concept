@@ -18,8 +18,10 @@
 int main();
 
 void kmain() {
+#if 0
     intro();
     intro_end();
+#endif
     main();
 }
 

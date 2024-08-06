@@ -17,10 +17,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <machine.h>
 #include <stdarg.h>
 
-#include "xosera_m68k_api.h"
+#include <rosco_m68k/machine.h>
+#include <rosco_m68k/xosera_m68k_api.h>
 
 #include "view.h"
 #include "backend.h"

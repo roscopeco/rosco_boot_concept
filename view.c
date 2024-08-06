@@ -26,6 +26,12 @@
 #define MAX_BOX_HEIGHT  ((VIEW_VRES-(MIN_PADDING*2)))
 #define CHAR_BUF_SIZE   16
 
+#ifndef strlen
+// This is really there in newlib, but needs the right compiler opts...
+// we'll just force the issue instead :D
+size_t strnlen(const char *str, size_t n);
+#endif
+
 static Model current;
 
 #ifdef ENABLE_TIMER
