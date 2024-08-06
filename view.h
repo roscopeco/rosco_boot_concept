@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "model.h"
+#include "window.h"
 
 #include "config.h"
 
@@ -31,7 +32,6 @@
 #else
 #include "topaz_font.h"
 #endif
-#define BOX_WIDTH       ((VIEW_HRES/1.4))       /* Width of the box */
 #define LINE_HEIGHT_EX  2                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   38                      /* Max characters in copyright before overflow */
 #elif (VIEW_HRES == 424)
@@ -40,7 +40,6 @@
 #else
 #include "topaz_font.h"
 #endif
-#define BOX_WIDTH       ((VIEW_HRES/1.8))       /* Width of the box */
 #define LINE_HEIGHT_EX  2                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   48                      /* Max characters in copyright before overflow */
 #elif (VIEW_HRES == 640)
@@ -49,7 +48,6 @@
 #else
 #include "bizcat_font.h"
 #endif
-#define BOX_WIDTH       ((VIEW_HRES/1.8))       /* Width of the box */
 #define LINE_HEIGHT_EX  0                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   58                      /* Max characters in copyright before overflow */
 #elif (VIEW_HRES == 848)
@@ -58,12 +56,13 @@
 #else
 #include "bizcat_font.h"
 #endif
-#define BOX_WIDTH       ((VIEW_HRES/3.0))       /* Width of the box */
 #define LINE_HEIGHT_EX  0                       /* Just allows line height adjustment per resolution */
 #define COPYRIGHT_MAX   88                      /* Max characters in copyright before overflow */
 #else
 #error Unknown resolution - add settings to view.h
 #endif
+
+#define MAX_WINDOWS     5
 
 #include "num_font.h"
 
@@ -87,19 +86,15 @@
 #define SHADOW_OFFSET   ((VIEW_HRES / 80))
 
 typedef struct {
-    int x, y, w, h;
-} Rect;
-
-typedef struct {
-    Rect    main_box;
-    Rect    main_box_header;
-    Rect    right_shadow;
-    Rect    bottom_shadow;
     Model*  model;
+    Window  windows[MAX_WINDOWS];
 } View;
 
 void view_init(View *view, Model *model);
-void view_recompute_size(View *view, Model *model);
 void view_repaint(View *view, bool force);
+Window* view_get_active_window(View *view);
+
+BACKEND_FONT_COOKIE view_get_regular_font();
+BACKEND_FONT_COOKIE view_get_small_font();
 
 #endif

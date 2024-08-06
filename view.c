@@ -23,19 +23,12 @@
 
 #include "debug.h"
 
-#define MAX_BOX_HEIGHT  ((VIEW_VRES-(MIN_PADDING*2)))
 #define CHAR_BUF_SIZE   16
 
-#ifndef strlen
+#ifndef strnlen
 // This is really there in newlib, but needs the right compiler opts...
 // we'll just force the issue instead :D
 size_t strnlen(const char *str, size_t n);
-#endif
-
-static Model current;
-
-#ifdef ENABLE_TIMER
-static char secs_buf[2];
 #endif
 
 static char cpu_buffer[CHAR_BUF_SIZE];
@@ -53,8 +46,6 @@ extern bool use_ruler;
 void view_init(View *view, Model *model) {
     view->model = model;
 
-    view_recompute_size(view, model);
-
     snprintf(mem_buffer, CHAR_BUF_SIZE, "%dMB RAM", model->mem_count / 1048576);
     snprintf(cpu_buffer, CHAR_BUF_SIZE, "MC%d @ %dMHz", model->cpu, model->mhz);
 
@@ -65,34 +56,12 @@ void view_init(View *view, Model *model) {
     small_font = backend_load_font(NUM_FONT, 8, 8, 6);
 }
 
-void view_recompute_size(View *view, Model *model) {
-    int main_box_height = LINE_HEIGHT * (model->n_items + 1);
+BACKEND_FONT_COOKIE view_get_regular_font() {
+    return regular_font;
+}
 
-    if (main_box_height > MAX_BOX_HEIGHT) {
-        model->n_items = MAX_BOX_HEIGHT / LINE_HEIGHT - 1;
-        main_box_height = LINE_HEIGHT * (model->n_items + 1);
-        debugf("WARN: Adjusted n_items to %d for height\n", model->n_items);
-    }
-
-    view->main_box.x = VIEW_HRES / 2 - BOX_WIDTH / 2;
-    view->main_box.y = VIEW_VRES / 2 - main_box_height / 2;
-    view->main_box.w = BOX_WIDTH;
-    view->main_box.h = main_box_height;
-
-    view->main_box_header.x = view->main_box.x;
-    view->main_box_header.y = view->main_box.y;
-    view->main_box_header.w = view->main_box.w;
-    view->main_box_header.h = LINE_HEIGHT;
-
-    view->right_shadow.x = view->main_box.x + view->main_box.w;
-    view->right_shadow.y = view->main_box.y + SHADOW_OFFSET;
-    view->right_shadow.w = SHADOW_OFFSET;
-    view->right_shadow.h = view->main_box.h;
-
-    view->bottom_shadow.x = view->main_box.x + SHADOW_OFFSET;
-    view->bottom_shadow.y = view->main_box.y + view->main_box.h;
-    view->bottom_shadow.w = view->main_box.w;
-    view->bottom_shadow.h = SHADOW_OFFSET;
+BACKEND_FONT_COOKIE view_get_small_font() {
+    return small_font;
 }
 
 #ifdef __ROSCO_M68K_ROM__
@@ -129,12 +98,40 @@ static void paint_anim_layer(Animation *current_anim) {
         current_anim = (Animation*)current_anim->node.next;
     }
 }
+
+static bool anims_dirty(Animation *current_anim) {
+    while (current_anim) {
+        if (current_anim->dirty) {
+            return true;
+        }
+        current_anim = (Animation*)current_anim->node.next;
+    }
+
+    return false;
+}
 #else
 #define paint_anim_layer(...)
 #endif
 
+static bool is_dirty(View *view) {
+    for (int i = 0; i < MAX_WINDOWS; i++) {
+        if (view->windows[i].active && view->windows[i].model->is_dirty) {
+            return true;
+        }
+    }
+
+#   ifdef ENABLE_ANIM    
+    return view->model->anim_list_dirty
+        || anims_dirty((Animation*)view->model->animations_back.next)
+        || anims_dirty((Animation*)view->model->animations_front.next)
+        ;
+#   else
+    return false;
+#   endif
+}
+
 void view_repaint(View *view, bool force) {
-    if (force || model_is_dirty(&current, view->model)) {        
+    if (force || is_dirty(view)) {        
         debug_model_update(view->model);
 
         backend_set_color(COLOR_BACKGROUND);
@@ -151,74 +148,15 @@ void view_repaint(View *view, bool force) {
         // Animations (back)
         paint_anim_layer((Animation*)view->model->animations_back.next);
 
-        // Main box
-        backend_set_color(COLOR_WINDOW_BACKGROUND);
-        backend_fill_rect(&view->main_box);
-
-        backend_set_color(COLOR_BLACK);
-        backend_draw_rect(&view->main_box);
-        backend_fill_rect(&view->main_box_header);
-
-        // Shadow
-        backend_set_color(COLOR_BACKGROUND_SHADOW);
-        backend_fill_rect(&view->right_shadow);
-        backend_fill_rect(&view->bottom_shadow);
-
-        // Header text
-        backend_set_color(COLOR_WHITE);
-        backend_text_write(BOX_TITLE, view->main_box_header.x + 4, view->main_box_header.y + 2, regular_font, FONT_WIDTH, FONT_HEIGHT);
-
-        backend_set_color(COLOR_YELLOW);
-        backend_text_write(VERSION, view->main_box_header.x + view->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), view->main_box_header.y + 2, regular_font, FONT_WIDTH, FONT_HEIGHT);
-
-        // Selection bar
-        Rect selection_rect;
-        selection_rect.x = view->main_box.x + 1;
-        selection_rect.y = view->main_box.y + view->main_box_header.h + (LINE_HEIGHT * current.selection);
-        selection_rect.w = view->main_box.w - 2;
-        selection_rect.h = LINE_HEIGHT - 1;  // -1 so as not to overdraw border on last item!
-        backend_set_color(COLOR_SELECTION_BAR);
-#ifdef BLIT_DEBUG
-        printf("SELECTION    ::::::: ");
-#endif   
-        backend_fill_rect(&selection_rect);
-
-        // Items text
-        backend_set_color(COLOR_ITEM_TEXT);
-        int y = view->main_box_header.y + view->main_box_header.h + LINE_PAD;
-
-        for (int i = 0; i < view->model->n_items; i++) {
-#           ifdef CENTER_ITEMS
-            int x = view->main_box.x + (view->main_box.w / 2) - (strlen(view->model->items[i]) * FONT_WIDTH / 2);
-            #else
-            int x = view->main_box_header.x + 4;
-#           endif
-
-#           ifdef HIGHLIGHT_SELECTION
-            if (i == current.selection) {
-                backend_set_color(COLOR_ITEM_HIGHLIGHT_TEXT);
+        for (int i = 0; i < MAX_WINDOWS; i++) {
+            Window *window = &view->windows[i];
+            
+            if (!window->active) {
+                break;
             }
-#           endif
 
-            backend_text_write(view->model->items[i], x, y, regular_font, FONT_WIDTH, FONT_HEIGHT);
-
-#           ifdef HIGHLIGHT_SELECTION
-            if (i == current.selection) {
-                backend_set_color(COLOR_ITEM_TEXT);
-            }
-#           endif
-
-            y += LINE_HEIGHT;
+            window_paint(window);
         }
-
-#       ifdef ENABLE_TIMER
-        // ticks remaining
-        if (view->model->timer_secs_left) {
-            secs_buf[0] = view->model->timer_secs_left;
-            backend_set_color(COLOR_YELLOW);
-            backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, small_font, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
-        }
-#       endif
 
         // Animations (front)
         paint_anim_layer((Animation*)view->model->animations_front.next);
@@ -299,4 +237,19 @@ void view_repaint(View *view, bool force) {
 
         backend_present();
     }
+}
+
+Window* view_get_active_window(View *view) {
+    Window *active = NULL;
+
+    for (int i = 0; i < MAX_WINDOWS; i++) {
+        if (view->windows[i].active) {
+            active = &view->windows[i];
+        } else {
+            return active;
+        }
+    }
+
+    // Should never be reached...
+    return NULL;
 }

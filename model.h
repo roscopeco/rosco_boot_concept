@@ -24,28 +24,25 @@
 #include "animation.h"
 
 typedef struct {
-    /* Mutable - included in dirty check */
-    uint8_t     selection;
-    int         n_items;
-    char**      items;
-    uint8_t     timer_secs_left;
-
 #ifdef ENABLE_ANIM
     bool        anim_list_dirty;
     ListNode    animations_back;
     ListNode    animations_front;
 #endif
 
-    /* Transient - not dirty checked */
-    uint32_t    last_4t_timer_ticks;
-    uint32_t    last_1s_timer_ticks;
-
     /* Immutable - not dirty checked */
     uint32_t    mem_count;
     uint32_t    cpu;
     uint32_t    mhz;
+
+    /* Transient - not dirty checked */
+    uint32_t    last_4t_timer_ticks;
+    uint32_t    last_1s_timer_ticks;
 } Model;
 
-bool model_is_dirty(Model *current, Model *target);
+typedef struct {
+    bool        is_dirty;
+    void*       window_data;
+} WindowModel;
 
 #endif

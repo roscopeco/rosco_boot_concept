@@ -20,6 +20,6 @@
 
 #include "model.h"
 
-bool control(Model *model);
+bool control(View *view);
 
 #endif

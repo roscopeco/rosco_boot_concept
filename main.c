@@ -18,6 +18,7 @@
 #include "model.h"
 #include "view.h"
 #include "controller.h"
+#include "main_menu.h"
 
 #ifdef ENABLE_ANIM
 #include "animation.h"
@@ -52,12 +53,9 @@ int main(void) {
         return 2;
     }
 
-    model.n_items = n_menu_items;
-    model.items = menu_items;
     model.mem_count = backend_get_memsize();
     model.cpu = backend_get_cpu();
     model.mhz = backend_get_cpu_mhz();
-    model.timer_secs_left = 5;
 
 #ifdef ENABLE_ANIM
 #ifdef SHOW_TEST_ANIM
@@ -74,7 +72,15 @@ int main(void) {
 
     view_init(&view, &model);
 
-    while (control(&model)) {
+    main_menu_window_init(
+        &view.windows[0], 
+        n_menu_items, 
+        menu_items, 
+        view_get_regular_font(), 
+        view_get_small_font()
+    );
+
+    while (control(&view)) {
         view_repaint(&view, false);
     }
 
