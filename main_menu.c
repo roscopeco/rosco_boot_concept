@@ -30,6 +30,9 @@ typedef struct {
     /* Transient - not dirty checked */
     uint32_t    last_4t_timer_ticks;
     uint32_t    last_1s_timer_ticks;
+
+    /* Static - not dirty checked */
+    BACKEND_FONT_COOKIE small_font;
 } MainMenuModel;
 
 #ifdef ENABLE_TIMER
@@ -72,11 +75,11 @@ static int paint_client_area(Window *window) {
 
         // Items text
         backend_set_color(COLOR_ITEM_TEXT);
-        int y = window->main_box_header.y + window->main_box_header.h + LINE_PAD;
+        int y = CLIENT_AREA_Y(window);
 
         for (int i = 0; i < MODEL(window)->n_items; i++) {
 #           ifdef CENTER_ITEMS
-            int x = window->main_box.x + (window->main_box.w / 2) - (strlen(MODEL(window)->items[i]) * FONT_WIDTH / 2);
+            int x = CLIENT_AREA_X(window) + (CLIENT_AREA_W(window) / 2) - (strlen(MODEL(window)->items[i]) * FONT_WIDTH / 2);
             #else
             int x = view->main_box_header.x + 4;
 #           endif
@@ -87,7 +90,7 @@ static int paint_client_area(Window *window) {
             }
 #           endif
 
-            backend_text_write(MODEL(window)->items[i], x, y, window->regular_font, FONT_WIDTH, FONT_HEIGHT);
+            backend_text_write(MODEL(window)->items[i], x, y, window->font, FONT_WIDTH, FONT_HEIGHT);
 
 #           ifdef HIGHLIGHT_SELECTION
             if (i == MODEL(window)->selection) {
@@ -103,7 +106,7 @@ static int paint_client_area(Window *window) {
     if (MODEL(window)->timer_secs_left) {
         secs_buf[0] = MODEL(window)->timer_secs_left;
         backend_set_color(COLOR_YELLOW);
-        backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, window->small_font, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
+        backend_text_write(secs_buf, selection_rect.x + selection_rect.w - 12, selection_rect.y + 2, MODEL(window)->small_font, NUM_FONT_WIDTH, NUM_FONT_HEIGHT);
     }
 #   endif
 
@@ -198,11 +201,13 @@ void main_menu_window_init(
     main_menu_model.items = items;
     main_menu_model.n_items = n_items;
     main_menu_model.timer_secs_left = 5;
+    main_menu_model.small_font = small_font;
 
     window_model.is_dirty = true;
     window_model.window_data = &main_menu_model;
 
     window->active = true;
+    window->window_type = WINDOW_TYPE_NORMAL;
 
     window->model = &window_model;
 
@@ -213,6 +218,5 @@ void main_menu_window_init(
 
     window->title = BOX_TITLE;
     window->subtitle = VERSION;
-    window->regular_font = regular_font;
-    window->small_font = small_font;
+    window->font = regular_font;
 }

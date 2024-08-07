@@ -18,7 +18,9 @@
 #include "model.h"
 #include "view.h"
 #include "controller.h"
+
 #include "main_menu.h"
+#include "dialog.h"
 
 #ifdef ENABLE_ANIM
 #include "animation.h"
@@ -78,6 +80,16 @@ int main(void) {
         menu_items, 
         view_get_regular_font(), 
         view_get_small_font()
+    );
+
+    dialog_window_init(
+        &view.windows[1],
+        WINDOW_TYPE_NORMAL,
+        "Dire warning!",
+        COLOR_YELLOW,
+        "Turning this off will break all sorts of things...",
+        COLOR_ITEM_TEXT,
+        view_get_regular_font()
     );
 
     while (control(&view)) {

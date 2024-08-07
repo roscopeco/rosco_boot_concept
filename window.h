@@ -9,6 +9,10 @@
 
 #define CLIENT_H_PAD        2
 
+#define CLIENT_AREA_X(window)       (( window->main_box.x + CLIENT_H_PAD ))
+#define CLIENT_AREA_Y(window)       (( window->main_box_header.y + window->main_box_header.h + LINE_PAD ))
+#define CLIENT_AREA_W(window)       (( window->main_box.w ))
+
 typedef enum {
     WINDOW_TYPE_NORMAL      = 0,
     WINDOW_TYPE_DIALOG,
@@ -33,8 +37,7 @@ typedef struct _Window {
 
     WindowModel*        model;
 
-    BACKEND_FONT_COOKIE regular_font;
-    BACKEND_FONT_COOKIE small_font;
+    BACKEND_FONT_COOKIE font;
 
     WindowFunc          get_client_width_func;
     WindowFunc          get_client_height_func;

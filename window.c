@@ -20,7 +20,12 @@ static void window_recompute_size(Window *window) {
     window->main_box_header.x = window->main_box.x;
     window->main_box_header.y = window->main_box.y;
     window->main_box_header.w = window->main_box.w;
-    window->main_box_header.h = LINE_HEIGHT;
+
+    if (window->window_type == WINDOW_TYPE_DIALOG) {
+        window->main_box_header.h = 0;
+    } else {
+        window->main_box_header.h = LINE_HEIGHT;
+    }
 
     window->right_shadow.x = window->main_box.x + window->main_box.w;
     window->right_shadow.y = window->main_box.y + SHADOW_OFFSET;
@@ -38,9 +43,10 @@ static void window_paint_chrome(Window *window) {
     backend_set_color(COLOR_WINDOW_BACKGROUND);
     backend_fill_rect(&window->main_box);
 
+    backend_set_color(COLOR_BLACK);
+
     // Title bar
     if (window->window_type == WINDOW_TYPE_NORMAL) {
-        backend_set_color(COLOR_BLACK);
         backend_fill_rect(&window->main_box_header);
     }
 
@@ -53,14 +59,16 @@ static void window_paint_chrome(Window *window) {
     backend_fill_rect(&window->bottom_shadow);
 
     // Header text
-    if (window->title != NULL) {
-        backend_set_color(COLOR_WHITE);
-        backend_text_write(window->title, window->main_box_header.x + 4, window->main_box_header.y + 2, window->regular_font, FONT_WIDTH, FONT_HEIGHT);
-    }
+    if (window->window_type != WINDOW_TYPE_DIALOG) {
+        if (window->title != NULL) {
+            backend_set_color(COLOR_WHITE);
+            backend_text_write(window->title, window->main_box_header.x + 4, window->main_box_header.y + 2, window->font, FONT_WIDTH, FONT_HEIGHT);
+        }
 
-    if (window->subtitle != NULL) {
-        backend_set_color(COLOR_YELLOW);
-        backend_text_write(window->subtitle, window->main_box_header.x + window->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), window->main_box_header.y + 2, window->regular_font, FONT_WIDTH, FONT_HEIGHT);
+        if (window->subtitle != NULL) {
+            backend_set_color(COLOR_YELLOW);
+            backend_text_write(window->subtitle, window->main_box_header.x + window->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), window->main_box_header.y + 2, window->font, FONT_WIDTH, FONT_HEIGHT);
+        }
     }
 }
 
