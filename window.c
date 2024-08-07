@@ -61,12 +61,12 @@ static void window_paint_chrome(Window *window) {
     // Header text
     if (window->window_type != WINDOW_TYPE_DIALOG) {
         if (window->title != NULL) {
-            backend_set_color(COLOR_WHITE);
+            backend_set_color(window->title_color);
             backend_text_write(window->title, window->main_box_header.x + 4, window->main_box_header.y + 2, window->font, FONT_WIDTH, FONT_HEIGHT);
         }
 
         if (window->subtitle != NULL) {
-            backend_set_color(COLOR_YELLOW);
+            backend_set_color(window->subtitle_color);
             backend_text_write(window->subtitle, window->main_box_header.x + window->main_box_header.w - 4 - (strlen(VERSION) * FONT_WIDTH), window->main_box_header.y + 2, window->font, FONT_WIDTH, FONT_HEIGHT);
         }
     }

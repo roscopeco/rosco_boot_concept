@@ -72,6 +72,7 @@ void dialog_window_init(
     window->dispatch_event_func = dispatch_event_func;
 
     window->title = title;
+    window->title_color = title_color;
     window->subtitle = NULL;
     window->font = font;
 }

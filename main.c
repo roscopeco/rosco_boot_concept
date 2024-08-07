@@ -87,7 +87,7 @@ int main(void) {
         WINDOW_TYPE_NORMAL,
         "Dire warning!",
         COLOR_YELLOW,
-        "Turning this off will break all sorts of things...",
+        "Turning this off will break\nall sorts of things...",
         COLOR_ITEM_TEXT,
         view_get_regular_font()
     );

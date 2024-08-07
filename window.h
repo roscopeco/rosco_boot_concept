@@ -33,7 +33,9 @@ typedef struct _Window {
 
     WindowType          window_type;
     char*               title;
+    BACKEND_COLOR       title_color;
     char*               subtitle;
+    BACKEND_COLOR       subtitle_color;
 
     WindowModel*        model;
 

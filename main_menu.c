@@ -217,6 +217,8 @@ void main_menu_window_init(
     window->dispatch_event_func = dispatch_event_func;
 
     window->title = BOX_TITLE;
+    window->title_color = COLOR_WHITE;
     window->subtitle = VERSION;
+    window->subtitle_color = COLOR_YELLOW;
     window->font = regular_font;
 }
