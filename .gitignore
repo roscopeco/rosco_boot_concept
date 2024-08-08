@@ -6,5 +6,9 @@
 *.map
 *.sym
 sdl2/test
-tests/test_blit_rects
+tests/test_gfx_utils_measure_text
 .DS_Store
+ok_check.h
+error_cross.h
+warning_triangle.h
+
