@@ -5,6 +5,14 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <getopt.h>
+
+struct arguments {
+    char *input_file;
+    char *output_file;
+    int no_palette;
+    char *var_name;
+};
 
 static char* basename(char const *path) {
     char *s = strrchr(path, '/');
@@ -144,20 +152,78 @@ static size_t dump_image(uint32_t buf_size, char *buf, FILE *out) {
     return last_count;
 }
 
-int main(int argc, char **argv) {
-    if (argc < 3) {
-        printf("Usage: pcx2xosera <input filename> <output filename> [output varname]\n\n");
-        exit(1);
+static void print_usage(const char *program_name) {
+    printf("Usage: %s [options] <input file> <output file>\n", program_name);
+    printf("Options:\n");
+    printf("  -n, --no-palette           Exclude palette\n");
+    printf("  -v, --var-name <name>      Specify alternative output variable name\n");
+    printf("  --help                     Show this help message and exit\n");
+}
+
+static int parse_opts(int argc, char **argv, struct arguments *args) {
+    /* Default values */
+    args->no_palette = 0;
+    args->var_name = NULL;
+
+    /* Option definitions */
+    const char *short_opts = "nv:";
+    const struct option long_opts[] = {
+        {"no-palette", no_argument, NULL, 'n'},
+        {"var-name", required_argument, NULL, 'v'},
+        {"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}
+    };
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+        switch (opt) {
+            case 'n':
+                args->no_palette = 1;
+                break;
+            case 'v':
+                args->var_name = optarg;
+                break;
+            case 'h':
+                print_usage(argv[0]);
+                return 1;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
+            default:
+                break;
+        }
     }
 
-    printf("Processing %s => %s\n", argv[1], argv[2]);
+    /* Remaining arguments should be the input and output files */
+    if (optind + 2 != argc) {
+        fprintf(stderr, "Error: Expected input and output file arguments\n");
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    args->input_file = argv[optind];
+    args->output_file = argv[optind + 1];
+
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    struct arguments arguments;
+
+    int opt_result = parse_opts(argc, argv, &arguments);
+    if (opt_result) {
+        exit(opt_result);
+    }
+
+    printf("Processing %s => %s\n", arguments.input_file, arguments.output_file);
 
     char *in_base;
     
-    if (argc == 4) {
-        in_base = argv[3];
+    if (arguments.var_name) {
+        in_base = arguments.var_name;
     } else {
-        in_base = tr('.', '_', basename(argv[1]));
+        in_base = tr('.', '_', basename(arguments.input_file));
+        in_base = tr('-', '_', in_base);
     }
 
     if (!in_base) {
@@ -165,15 +231,15 @@ int main(int argc, char **argv) {
         exit(2);
     }
 
-    FILE *pcx = fopen(argv[1], "rb");
+    FILE *pcx = fopen(arguments.input_file, "rb");
     if (!pcx) {
-        printf("'%s': no such file\n", argv[1]);
+        printf("'%s': no such file\n", arguments.input_file);
         exit(3);
     }
 
     size_t buffer_size = file_size(pcx);
     if (buffer_size == -1) {
-        printf("'%s': cannot stat\n", argv[1]);
+        printf("'%s': cannot stat\n", arguments.input_file);
         exit(4);
     }
 
@@ -195,9 +261,9 @@ int main(int argc, char **argv) {
         exit(7);
     }
 
-    FILE *out = fopen(argv[2], "w");
+    FILE *out = fopen(arguments.output_file, "w");
     if (!out) {
-        printf("'%s': open failed\n", argv[1]);
+        printf("'%s': open failed\n", arguments.output_file);
         exit(8);
     }
 
@@ -213,20 +279,22 @@ int main(int argc, char **argv) {
     fputs(size_str, out);
     fputs(";\n\n", out);
 
-    fputs("uint16_t pcx_", out);
-    fputs(in_base, out);
-    fputs("_palette[] = {", out);
+    if (!arguments.no_palette) {
+        fputs("uint16_t pcx_", out);
+        fputs(in_base, out);
+        fputs("_palette[] = {", out);
 
-    if (!dump_palette(buffer + (buffer_size - 769), out)) {
-        printf("ERROR: Palette dump failed\n");
-        return false;
+        if (!dump_palette(buffer + (buffer_size - 769), out)) {
+            printf("ERROR: Palette dump failed\n");
+            return false;
+        }    
+
+        fputs("\n};\n", out);
+
+        fputs("uint32_t pcx_", out);
+        fputs(in_base, out);
+        fputs("_palette_len_words = 256;\n\n", out);
     }
-
-    fputs("\n};\n", out);
-
-    fputs("uint32_t pcx_", out);
-    fputs(in_base, out);
-    fputs("_palette_len_words = 256;\n\n", out);
 
     uint32_t data_size = buffer_size - 769 - 128;
 
