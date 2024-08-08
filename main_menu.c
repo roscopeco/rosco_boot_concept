@@ -110,6 +110,7 @@ static int paint_client_area(Window *window) {
     }
 #   endif
 
+
     return 0;
 }
 

@@ -82,12 +82,12 @@ int main(void) {
         view_get_small_font()
     );
 
-    dialog_window_yes_no_init(
+    dialog_window_ok_init(
         &view.windows[1],
-        WINDOW_TYPE_NORMAL,
+        WINDOW_TYPE_DIALOG,
         "Dire warning!",
         COLOR_ITEM_HIGHLIGHT_TEXT,
-        "Turning this off will break all\nsorts of things...",
+        "Please don't do that again.",
         COLOR_ITEM_TEXT,
         DIALOG_ICON_WARNING
     );

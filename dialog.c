@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdio.h>
+
 #include "view.h"
 #include "window.h"
 #include "dialog.h"
@@ -8,15 +10,6 @@
 #include "error_cross.h"
 #include "warning_triangle.h"
 #include "ok_check.h"
-
-// Horizontal padding for dialogs
-#define DIALOG_H_PAD        (( CLIENT_H_PAD * 8 ))
-#define DIALOG_ICON_WIDTH   16
-#define DIALOG_ICON_HEIGHT  16
-#define DIALOG_ICON_H_PAD   8
-
-// Addiitonal lines of vertical padding between message and options
-#define MESSAGE_PAD_LINES   0
 
 #define MODEL(window)       (( ((DialogModel*)window->model->window_data) ))
 
@@ -48,6 +41,14 @@ static const char* opts_yes_no_strings[] = {
 
 static const int opts_yes_no_count = 2;
 
+static const char* opts_abort_retry_fail_strings[] = {
+    "Abort",
+    "Retry",
+    "Fail"
+};
+
+static const int opts_abort_retry_fail_count = 3;
+
 /* Only support one at a time for now... */
 static WindowModel window_model;
 static DialogModel dialog_model;
@@ -58,7 +59,7 @@ static inline __attribute__((always_inline)) int calc_message_height(Window *win
     // Ensure there's space for an icon if we have one, only really for one-line messages.
     if (MODEL(window)->icon_type != DIALOG_ICON_NONE) {        
         if (message_height < DIALOG_ICON_HEIGHT) {
-            message_height = DIALOG_ICON_HEIGHT;
+            message_height = DIALOG_ICON_HEIGHT + LINE_PAD + 1;     // +1 to compensate for divider
         }
     }
 
@@ -74,12 +75,18 @@ static int get_window_width(Window *window) {
 }
 
 static int calc_window_height(__attribute__((unused)) Window *window) {
-    return calc_message_height(window) + (MODEL(window)->n_options * (LINE_HEIGHT + LINE_PAD));
+    return calc_message_height(window) + ((MODEL(window)->n_options * LINE_HEIGHT) + LINE_PAD);
 }
 
 static int paint_client_area(Window *window) {    
     int y = CLIENT_AREA_Y(window);
-    int options_y = CLIENT_AREA_Y(window) + calc_message_height(window) + LINE_PAD;
+    int options_y = CLIENT_AREA_Y(window) + calc_message_height(window);// + LINE_PAD;
+
+    printf("options_y                       = %d\n", options_y);
+    printf("  CLIENT_AREA_Y(window)         = %d\n", CLIENT_AREA_Y(window));
+    printf("  calc_message_height(window)   = %d\n", calc_message_height(window));
+    printf("  LINE_PAD                      = %d\n", LINE_PAD);
+    printf("\n");
 
     int x;
     
@@ -123,7 +130,7 @@ static int paint_client_area(Window *window) {
     backend_fill_rect(&temp_rect);
 
     // Divider
-    temp_rect.y = options_y;
+    temp_rect.y = options_y - 1;
     temp_rect.h = 1;
     backend_set_color(COLOR_BLACK);
     backend_fill_rect(&temp_rect);
@@ -283,6 +290,28 @@ void dialog_window_yes_no_init(
         text_color,
         opts_yes_no_strings,
         opts_yes_no_count,
+        icon_type
+    );
+}
+
+void dialog_window_abort_retry_fail_init(
+    Window* window,
+    WindowType window_type,
+    char *title,
+    BACKEND_COLOR title_color,
+    char *message,
+    BACKEND_COLOR text_color,
+    DialogIconType icon_type
+) {
+    dialog_window_init(
+        window,
+        window_type,
+        title,
+        title_color,
+        message,
+        text_color,
+        opts_abort_retry_fail_strings,
+        opts_abort_retry_fail_count,
         icon_type
     );
 }
