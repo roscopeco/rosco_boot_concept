@@ -43,6 +43,10 @@ CP=cp
 
 COPASM=$(XOSERA_M68K_API)/bin/copasm
 
+PCX2XOSERA_DIR?=pcx2xosera
+PCX2XOSERA_PROG?=pcx2xosera
+PCX2XOSERA?=$(PCX2XOSERA_DIR)/$(PCX2XOSERA_PROG)
+
 ifeq ($(ENABLE_ANIM),true)
 EXTRA_CFLAGS+=-DENABLE_ANIM
 endif
@@ -148,13 +152,16 @@ SOURCES+=$(CSOURCES) $(CXXSOURCES) $(SSOURCES) $(ASMSOURCES) $(RAWSOURCES)
 # Assume each source files makes an object file
 OBJECTS=$(addsuffix .o,$(basename $(SOURCES)))
 
+IMAGESOURCES=$(wildcard *.pcx)
+IMAGEHEADERS=$(addsuffix .h,$(basename $(IMAGESOURCES)))
+
 TO_CLEAN=$(OBJECTS) $(ELF) $(BINARY) $(MAP) $(SYM) $(SYM_SIZE) $(DISASM) $(addsuffix .casm.ii,$(basename $(CPASMSOURCES))) $(CASMOUTPUT) $(addsuffix .lst,$(basename $(SSOURCES) $(ASMSOURCES) $(CASMSOURCES)))
 
 .PHONY: all clean tests
 
 all: tests $(BINARY) $(DISASM) sdl2/test
 
-$(ELF) : $(OBJECTS) # welcome/intro-lib.a
+$(ELF) : $(OBJECTS) $(IMAGEHEADERS)
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 	$(NM) --numeric-sort $@ >$(SYM)
 	$(NM) --size-sort $@ >$(SYM_SIZE)
@@ -192,23 +199,35 @@ $(OBJECTS): $(CASMOUTPUT) $(MAKEFILE_LIST)
 	$(CC) -E -xc -D__COPASM__=1 -I$(XOSERA_M68K_API) $< -o $(basename $<).casm.ii
 	$(COPASM) -v -l -i $(XOSERA_M68K_API) -o $@ $(basename $<).casm.ii
 
-clean: cleanintro cleansdl cleantests
+# Preprocessed Xosera 4bpp images
+$(PCX2XOSERA): $(PCX2XOSERA_DIR)/Makefile $(PCX2XOSERA_DIR)/main.c
+	$(MAKE) -C $(PCX2XOSERA_DIR) $(PCX2XOSERA_PROG)
+
+%.h : %.pcx pcx2xosera/pcx2xosera
+	$(PCX2XOSERA) --no-palette $< $@
+
+clean: cleanintro cleansdl cleantests cleanpcx2xosera cleanimageheaders
 
 tests: tests/Makefile	
-	make -C tests test
+	$(MAKE) -C tests test
 
-sdl2/test: tests sdl2/Makefile $(OBJECTS)
-	make -C sdl2 test
+sdl2/test: tests sdl2/Makefile $(OBJECTS) $(IMAGEHEADERS)
+	$(MAKE) -C sdl2 test
 
 welcome/intro-lib.a:
-	make -C welcome intro-lib.a
+	$(MAKE) -C welcome intro-lib.a
 
 cleanintro:
-	make -C welcome clean
+	$(MAKE) -C welcome clean
 
 cleantests:
-	make -C tests clean
+	$(MAKE) -C tests clean
 
 cleansdl:
-	make -C sdl2 clean
+	$(MAKE) -C sdl2 clean
 
+cleanpcx2xosera:
+	$(MAKE) -C $(PCX2XOSERA_DIR) clean
+
+cleanimageheaders:
+	$(RM) $(IMAGEHEADERS)
