@@ -43,6 +43,7 @@
 
 #define BLIT_COLOR(c)               (((c << 12) | (c << 8) | (c << 4) | c))
 
+#define XO_COLOR_TRANSPARENT        0x0000
 #define XO_COLOR_BLACK              0xF000
 #define XO_COLOR_WHITE              0xFFFF
 #define XO_COLOR_YELLOW             0xFDD0
@@ -52,6 +53,12 @@
 #define XO_COLOR_SELECTION_BAR      0xF18A
 #define XO_COLOR_ITEM_TEXT          0xF111
 #define XO_COLOR_ITEM_HILITE_TEXT   0xFEEE
+#define XO_COLOR_DIALOG_BACKGROUND  0xFAAA
+#define XO_COLOR_DARK_YELLOW        0xF980
+#define XO_COLOR_RED                0xFE22
+#define XO_COLOR_DARK_RED           0xF800
+#define XO_COLOR_GREEN              0xF6C0
+#define XO_COLOR_DARK_GREEN         0xF150
 
 #if VIEW_HRES == 320
 #define XO_PAGE_0_ADDR              0x0000
@@ -200,6 +207,7 @@ bool backend_init(void) {
     xmem_setw_next_addr(XR_COLOR_A_ADDR);
 
     // Set up palette
+    xmem_setw_next(XO_COLOR_TRANSPARENT);
     xmem_setw_next(XO_COLOR_BLACK);
     xmem_setw_next(XO_COLOR_WHITE);
     xmem_setw_next(XO_COLOR_YELLOW);
@@ -209,6 +217,12 @@ bool backend_init(void) {
     xmem_setw_next(XO_COLOR_SELECTION_BAR);
     xmem_setw_next(XO_COLOR_ITEM_TEXT);
     xmem_setw_next(XO_COLOR_ITEM_HILITE_TEXT);
+    xmem_setw_next(XO_COLOR_DIALOG_BACKGROUND);
+    xmem_setw_next(XO_COLOR_DARK_YELLOW);
+    xmem_setw_next(XO_COLOR_RED);
+    xmem_setw_next(XO_COLOR_DARK_RED);
+    xmem_setw_next(XO_COLOR_GREEN);
+    xmem_setw_next(XO_COLOR_DARK_GREEN);
 
     xosera_current_page = XO_PAGE_0_ADDR;
     xosera_flip = false;

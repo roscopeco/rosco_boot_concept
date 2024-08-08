@@ -11,7 +11,26 @@ void dialog_window_init(
     BACKEND_COLOR title_color,
     char *message,
     BACKEND_COLOR text_color,
-    BACKEND_FONT_COOKIE font 
+    const char **options,
+    const int n_options
+);
+
+void dialog_window_ok_init(
+    Window* window,
+    WindowType window_type,
+    char *title,
+    BACKEND_COLOR title_color,
+    char *message,
+    BACKEND_COLOR text_color
+);
+
+void dialog_window_yes_no_init(
+    Window* window,
+    WindowType window_type,
+    char *title,
+    BACKEND_COLOR title_color,
+    char *message,
+    BACKEND_COLOR text_color
 );
 
 

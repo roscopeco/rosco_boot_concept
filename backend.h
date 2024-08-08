@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "graphics.h"
+#include "graphics_primitives.h"
 
 typedef enum {
     NONE,
@@ -14,7 +14,8 @@ typedef enum {
 } BACKEND_EVENT;
 
 typedef enum {
-    COLOR_BLACK = 0,
+    COLOR_TRANSPARENT = 0,
+    COLOR_BLACK,
     COLOR_WHITE,
     COLOR_YELLOW,
     COLOR_BACKGROUND,
@@ -23,13 +24,12 @@ typedef enum {
     COLOR_SELECTION_BAR,
     COLOR_ITEM_TEXT,
     COLOR_ITEM_HIGHLIGHT_TEXT,
-    COLOR_UNUSED1,
-    COLOR_UNUSED2,
-    COLOR_UNUSED3,
-    COLOR_UNUSED4,
-    COLOR_UNUSED5,
-    COLOR_UNUSED6,
-    COLOR_UNUSED7,
+    COLOR_DIALOG_BACKGROUND,
+    COLOR_DARK_YELLOW,
+    COLOR_RED,
+    COLOR_DARK_RED,
+    COLOR_GREEN,
+    COLOR_DARK_GREEN,
 } BACKEND_COLOR;
 
 typedef uintptr_t BACKEND_FONT_COOKIE;

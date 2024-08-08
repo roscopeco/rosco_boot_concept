@@ -52,8 +52,8 @@ void view_init(View *view, Model *model) {
     cpu_buffer_len = strnlen(cpu_buffer, CHAR_BUF_SIZE);
     copyright_len = strnlen(COPYRIGHT, COPYRIGHT_MAX);
 
-    regular_font = backend_load_font(FONT, 8, 16, 256);
-    small_font = backend_load_font(NUM_FONT, 8, 8, 6);
+    regular_font = backend_load_font(FONT, FONT_WIDTH, FONT_HEIGHT, 256);
+    small_font = backend_load_font(NUM_FONT, NUM_FONT_WIDTH, NUM_FONT_HEIGHT, 6);
 }
 
 BACKEND_FONT_COOKIE view_get_regular_font() {

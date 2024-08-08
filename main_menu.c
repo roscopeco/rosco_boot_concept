@@ -149,34 +149,34 @@ static bool update_timers(__attribute__((unused)) Window *window) {
 
 
 static bool dispatch_event_func(Window *window, BACKEND_EVENT event) {
-    MainMenuModel *model = MODEL(window);
+    MainMenuModel *menu_model = MODEL(window);
 
     // do first, so keypress can set zero and kill timer...
     if (update_timers(window)) {
-        debugf("Timer expired; default choice: %d\n", model->selection);
+        debugf("Timer expired; default choice: %d\n", menu_model->selection);
         return false;
     };
 
     switch (event) {
     case UP:
-        model->timer_secs_left = 0;
+        menu_model->timer_secs_left = 0;
 
-        if (model->selection == 0) {
-            model->selection = model->n_items - 1;
+        if (menu_model->selection == 0) {
+            menu_model->selection = menu_model->n_items - 1;
         } else {
-            model->selection--;
+            menu_model->selection--;
         }
 
         window->model->is_dirty = true;
 
         return true;
     case DOWN:
-        model->timer_secs_left = 0;
+        menu_model->timer_secs_left = 0;
 
-        if (model->selection == model->n_items - 1) {
-            model->selection = 0;
+        if (menu_model->selection == menu_model->n_items - 1) {
+            menu_model->selection = 0;
         } else {
-            model->selection++;
+            menu_model->selection++;
         }
 
         window->model->is_dirty = true;
@@ -217,8 +217,13 @@ void main_menu_window_init(
     window->dispatch_event_func = dispatch_event_func;
 
     window->title = BOX_TITLE;
-    window->title_color = COLOR_WHITE;
     window->subtitle = VERSION;
-    window->subtitle_color = COLOR_YELLOW;
     window->font = regular_font;
+    window->has_shadow = true;
+
+    window->background_color = COLOR_WINDOW_BACKGROUND;
+    window->border_color = COLOR_BLACK;
+    window->shadow_color = COLOR_BACKGROUND_SHADOW;
+    window->title_color = COLOR_WHITE;
+    window->subtitle_color = COLOR_YELLOW;
 }

@@ -55,5 +55,5 @@ clean:
 sdl_backend.o: sdl_backend.c
 	$(CC) -c $(CFLAGS) $(EXTRA_CFLAGS) -o $@ $<
 
-test: main.o view.o controller.o list.o window.o main_menu.o dialog.o test_anim.o sdl_backend.o
+test: main.o view.o controller.o list.o window.o main_menu.o dialog.o graphics.o graphics_utils.o test_anim.o sdl_backend.o
 	$(CC) $(LDFLAGS) -o $@ $^

@@ -31,15 +31,21 @@ typedef struct _Window {
     Rect                right_shadow;
     Rect                bottom_shadow;
 
+    bool                has_shadow;
+
     WindowType          window_type;
     char*               title;
-    BACKEND_COLOR       title_color;
     char*               subtitle;
-    BACKEND_COLOR       subtitle_color;
 
     WindowModel*        model;
 
     BACKEND_FONT_COOKIE font;
+
+    BACKEND_COLOR       background_color;
+    BACKEND_COLOR       border_color;
+    BACKEND_COLOR       shadow_color;
+    BACKEND_COLOR       title_color;
+    BACKEND_COLOR       subtitle_color;
 
     WindowFunc          get_client_width_func;
     WindowFunc          get_client_height_func;
