@@ -42,6 +42,7 @@ BACKEND_FONT_COOKIE backend_load_font(const uint8_t *font, int font_width, int f
 void backend_text_write(const char *str, int x, int y, BACKEND_FONT_COOKIE font, int font_width, int font_height);
 void backend_draw_rect(Rect *rect);
 void backend_fill_rect(Rect *rect);
+void backend_draw_image(int x, int y, int w, int h, uint16_t *image, int image_words);
 void backend_present(void);
 uint32_t backend_get_ticks(void);
 uint32_t backend_get_cpu(void);

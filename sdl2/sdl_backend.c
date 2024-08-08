@@ -149,6 +149,41 @@ void backend_fill_rect(Rect *rect) {
     SDL_RenderFillRect(renderer, &sdl_rect);
 }
 
+void backend_draw_image(int x, int y, int w, int h, uint16_t *image, int image_words) {
+    int dx = 0;
+    int dy = 0;
+
+    for (int i = 0; i < image_words; i++) {
+            uint16_t word = *image++;
+
+            uint8_t color = (word & 0xFF00) >> 8;
+            if (color > 0) {
+                SDL_Color sdl_color = colors[color];
+                SDL_SetRenderDrawColor(renderer, sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
+                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+            }
+
+            dx += 1;
+            if (dx % w == 0) {
+                dx = 0;
+                dy++;
+            }
+
+            color = word & 0x00FF;
+            if (color > 0) {
+                SDL_Color sdl_color = colors[color];
+                SDL_SetRenderDrawColor(renderer, sdl_color.r, sdl_color.g, sdl_color.b, sdl_color.a);
+                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+            }
+
+            dx += 1;
+            if (dx % w == 0) {
+                dx = 0;
+                dy++;
+            }
+    }
+}
+
 void backend_present(void) {
     SDL_RenderPresent(renderer);
 }

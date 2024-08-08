@@ -88,7 +88,8 @@ int main(void) {
         "Dire warning!",
         COLOR_ITEM_HIGHLIGHT_TEXT,
         "Turning this off will break all\nsorts of things...",
-        COLOR_ITEM_TEXT
+        COLOR_ITEM_TEXT,
+        DIALOG_ICON_WARNING
     );
 
     while (control(&view)) {

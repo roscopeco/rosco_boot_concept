@@ -80,4 +80,5 @@ void window_paint(Window *window) {
     window_recompute_size(window);
     window_paint_chrome(window);
     window->paint_client_area(window);
+    window->model->is_dirty = false;
 }

@@ -5,8 +5,15 @@
 #include "graphics.h"
 #include "graphics_utils.h"
 
+#include "error_cross.h"
+#include "warning_triangle.h"
+#include "ok_check.h"
+
 // Horizontal padding for dialogs
 #define DIALOG_H_PAD        (( CLIENT_H_PAD * 8 ))
+#define DIALOG_ICON_WIDTH   16
+#define DIALOG_ICON_HEIGHT  16
+#define DIALOG_ICON_H_PAD   8
 
 // Addiitonal lines of vertical padding between message and options
 #define MESSAGE_PAD_LINES   0
@@ -21,6 +28,7 @@ typedef struct {
     int             selection;
     BACKEND_COLOR   title_color;
     BACKEND_COLOR   text_color;
+    DialogIconType  icon_type;
 
     /* Computed */
     int             message_width_chars;
@@ -44,21 +52,66 @@ static const int opts_yes_no_count = 2;
 static WindowModel window_model;
 static DialogModel dialog_model;
 
+static inline __attribute__((always_inline)) int calc_message_height(Window *window) {
+    int message_height = ((MODEL(window)->message_height_lines + MESSAGE_PAD_LINES) * (LINE_HEIGHT + LINE_PAD));
+
+    // Ensure there's space for an icon if we have one, only really for one-line messages.
+    if (MODEL(window)->icon_type != DIALOG_ICON_NONE) {        
+        if (message_height < DIALOG_ICON_HEIGHT) {
+            message_height = DIALOG_ICON_HEIGHT;
+        }
+    }
+
+    return message_height;
+}
+
 static int get_window_width(Window *window) {
-    return MODEL(window)->message_width_chars * FONT_WIDTH + DIALOG_H_PAD;
+    if (MODEL(window)->icon_type == DIALOG_ICON_NONE) {
+        return MODEL(window)->message_width_chars * FONT_WIDTH + DIALOG_H_PAD;
+    }
+
+    return MODEL(window)->message_width_chars * FONT_WIDTH + DIALOG_H_PAD + DIALOG_ICON_WIDTH + (DIALOG_ICON_H_PAD * 2);
 }
 
 static int calc_window_height(__attribute__((unused)) Window *window) {
-    return (MODEL(window)->message_height_lines + MESSAGE_PAD_LINES + MODEL(window)->n_options) * LINE_HEIGHT + LINE_PAD;
+    return calc_message_height(window) + (MODEL(window)->n_options * (LINE_HEIGHT + LINE_PAD));
 }
 
 static int paint_client_area(Window *window) {    
-    backend_set_color(MODEL(window)->text_color);
     int y = CLIENT_AREA_Y(window);
-    int options_y = CLIENT_AREA_Y(window) + (LINE_HEIGHT * (MODEL(window)->message_height_lines + MESSAGE_PAD_LINES));
-    int x = CLIENT_AREA_X(window) + (CLIENT_AREA_W(window) / 2) - ((MODEL(window)->message_width_chars * FONT_WIDTH + (DIALOG_H_PAD / 2)) / 2);
+    int options_y = CLIENT_AREA_Y(window) + calc_message_height(window) + LINE_PAD;
+
+    int x;
     
+    if (MODEL(window)->icon_type == DIALOG_ICON_NONE) {
+        x = CLIENT_AREA_X(window) 
+                + ((CLIENT_AREA_W(window)) / 2) 
+                - ((MODEL(window)->message_width_chars * FONT_WIDTH + (DIALOG_H_PAD / 2)) / 2);
+    } else {
+        x = CLIENT_AREA_X(window) 
+                + DIALOG_ICON_WIDTH 
+                + (DIALOG_ICON_H_PAD * 2) 
+                + ((CLIENT_AREA_W(window) - (DIALOG_ICON_WIDTH + (DIALOG_ICON_H_PAD * 2))) / 2) 
+                - ((MODEL(window)->message_width_chars * FONT_WIDTH + (DIALOG_H_PAD / 2)) / 2);
+    }
+    
+    backend_set_color(MODEL(window)->text_color);
     gfx_render_text(MODEL(window)->message, x, y, window->font, FONT_WIDTH, FONT_HEIGHT);
+
+    switch (MODEL(window)->icon_type) {
+    case DIALOG_ICON_NONE:
+        // nothing to do
+        break;
+    case DIALOG_ICON_CHECK:
+        backend_draw_image(CLIENT_AREA_X(window) + DIALOG_ICON_H_PAD, CLIENT_AREA_Y(window), DIALOG_ICON_WIDTH, DIALOG_ICON_HEIGHT, pcx_ok_check_pcx_data, pcx_ok_check_pcx_data_len_words);
+        break;
+    case DIALOG_ICON_WARNING:
+        backend_draw_image(CLIENT_AREA_X(window) + DIALOG_ICON_H_PAD, CLIENT_AREA_Y(window), DIALOG_ICON_WIDTH, DIALOG_ICON_HEIGHT, pcx_warning_triangle_pcx_data, pcx_warning_triangle_pcx_data_len_words);
+        break;
+    case DIALOG_ICON_STOP:
+        backend_draw_image(CLIENT_AREA_X(window) + DIALOG_ICON_H_PAD, CLIENT_AREA_Y(window), DIALOG_ICON_WIDTH, DIALOG_ICON_HEIGHT, pcx_error_cross_pcx_data, pcx_error_cross_pcx_data_len_words);
+        break;
+    }
 
     // Selection bar
     Rect temp_rect;
@@ -148,7 +201,8 @@ void dialog_window_init(
     char *message,
     BACKEND_COLOR text_color,
     const char **options,
-    const int n_options
+    const int n_options,
+    DialogIconType icon_type
 ) {
     dialog_model.message = message;
     dialog_model.title_color = title_color;
@@ -161,6 +215,8 @@ void dialog_window_init(
 
     dialog_model.options = options;
     dialog_model.n_options = n_options;
+
+    dialog_model.icon_type = icon_type;
 
     window_model.is_dirty = true;
     window_model.window_data = &dialog_model;
@@ -193,7 +249,8 @@ void dialog_window_ok_init(
     char *title,
     BACKEND_COLOR title_color,
     char *message,
-    BACKEND_COLOR text_color
+    BACKEND_COLOR text_color,
+    DialogIconType icon_type
 ) {
     dialog_window_init(
         window,
@@ -203,7 +260,8 @@ void dialog_window_ok_init(
         message,
         text_color,
         opts_ok_strings,
-        opts_ok_count
+        opts_ok_count,
+        icon_type
     );
 }
 
@@ -213,7 +271,8 @@ void dialog_window_yes_no_init(
     char *title,
     BACKEND_COLOR title_color,
     char *message,
-    BACKEND_COLOR text_color
+    BACKEND_COLOR text_color,
+    DialogIconType icon_type
 ) {
     dialog_window_init(
         window,
@@ -223,6 +282,7 @@ void dialog_window_yes_no_init(
         message,
         text_color,
         opts_yes_no_strings,
-        opts_yes_no_count
+        opts_yes_no_count,
+        icon_type
     );
 }
